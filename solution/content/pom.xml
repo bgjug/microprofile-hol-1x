@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>solution</artifactId>
+        <groupId>bg.jug</groupId>
+        <version>1.2.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>content</artifactId>
+    <packaging>war</packaging>
+    <properties>
+        <version.ws-liberty>17.0.0.4</version.ws-liberty>
+    </properties>
+    <name>Content Microservice (WebSphere Liberty)</name>
+
+    <build>
+        <finalName>content</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.wasdev.wlp.maven.plugins</groupId>
+                <artifactId>liberty-maven-plugin</artifactId>
+                <configuration>
+                    <assemblyArtifact>
+                        <groupId>com.ibm.websphere.appserver.runtime</groupId>
+                        <artifactId>wlp-microProfile1</artifactId>
+                        <version>${version.ws-liberty}</version>
+                        <type>zip</type>
+                    </assemblyArtifact>
+                    <userDirectory>${project.build.directory}</userDirectory>
+                    <serverName>contentServer</serverName>
+                    <bootstrapProperties>
+                        <default.http.port>${contentPort}</default.http.port>
+                    </bootstrapProperties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-server</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>create-server</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>start-server</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start-server</goal>
+                        </goals>
+                        <configuration>
+                            <verifyTimeout>60</verifyTimeout>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy-app</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                        <configuration>
+                            <appArchive>${project.build.directory}/content.war</appArchive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>stop-server</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>stop-server</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>package-server</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>package-server</goal>
+                        </goals>
+                        <configuration>
+                            <assemblyInstallDirectory>${project.build.directory}</assemblyInstallDirectory>
+                            <packageFile>${project.build.directory}/content.jar</packageFile>
+                            <include>runnable</include>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

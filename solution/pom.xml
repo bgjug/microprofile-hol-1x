@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>bg.jug</groupId>
+        <artifactId>microprofile-hol</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>solution</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <usersPort>9100</usersPort>
+        <authorsPort>9110</authorsPort>
+        <contentPort>9120</contentPort>
+        <subscribersPort>9130</subscribersPort>
+        <guiPort>9000</guiPort>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <name>Showcase Application</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.microprofile</groupId>
+            <artifactId>microprofile</artifactId>
+            <version>1.2</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>build</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>content</module>
+                <module>users</module>
+                <module>subscribers</module>
+                <module>authors</module>
+                <module>gui</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>start</id>
+            <build>
+                <defaultGoal>pre-integration-test</defaultGoal>
+
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+
+                            <!-- Start users microservice -->
+                            <!-- Running on WildFly Swarm -->
+                            <!-- Available at http://localhost:9100/users -->
+                            <execution>
+                                <id>users</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <async>true</async>
+                                    <executable>java</executable>
+                                    <workingDirectory>users</workingDirectory>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>target/users-swarm.jar</argument>
+                                        <argument>-Dswarm.http.port=${usersPort}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <!-- TODO still not running -->
+                            <!-- Start authors microservice -->
+                            <!-- Running on Hammock -->
+                            <!-- Available at http://localhost:9110/authors -->
+                            <execution>
+                                <id>authors</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <async>true</async>
+                                    <executable>java</executable>
+                                    <workingDirectory>authors</workingDirectory>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>target/authors.jar</argument>
+                                        <argument>-Dwebserver.port=${authorsPort}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <!-- TODO make it run on port 9120 -->
+                            <!-- Start content microservice -->
+                            <!-- Running on IBM WebSphere Liberty -->
+                            <!-- Available at http://localhost:9080/users -->
+                            <execution>
+                                <id>content</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <async>true</async>
+                                    <executable>java</executable>
+                                    <workingDirectory>content</workingDirectory>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>target/content.jar</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <!-- TODO make it run on the root path -->
+                            <!-- Start subscribers microservice -->
+                            <!-- Running on Payara Micro -->
+                            <!-- Available at http://localhost:9130/subscribers-1.2.0-SNAPSHOT/subscribers -->
+                            <execution>
+                                <id>subscribers</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <async>true</async>
+                                    <executable>java</executable>
+                                    <workingDirectory>subscribers</workingDirectory>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>target/subscribers-microbundle.jar</argument>
+                                        <argument>--port</argument>
+                                        <argument>${subscribersPort}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                            <!-- Start GUI microservice -->
+                            <!-- Running on TomEE -->
+                            <!-- REST resources available at http://localhost:9000/gui -->
+                            <!-- UI available at http://localhost:9000 -->
+                            <execution>
+                                <id>gui</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>java</executable>
+                                    <workingDirectory>gui</workingDirectory>
+                                    <arguments>
+                                        <argument>-jar</argument>
+                                        <argument>target/ROOT-exec.jar</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
