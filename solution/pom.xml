@@ -30,6 +30,7 @@
             <artifactId>microprofile</artifactId>
             <version>1.2</version>
             <type>pom</type>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -102,10 +103,9 @@
                                 </configuration>
                             </execution>
 
-                            <!-- TODO make it run on port 9120 -->
                             <!-- Start content microservice -->
                             <!-- Running on IBM WebSphere Liberty -->
-                            <!-- Available at http://localhost:9080/users -->
+                            <!-- Available at http://localhost:9120/content -->
                             <execution>
                                 <id>content</id>
                                 <phase>pre-integration-test</phase>
