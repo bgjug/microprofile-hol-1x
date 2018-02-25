@@ -1,11 +1,11 @@
 package bg.jug.microprofile.hol.users;
 
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -23,5 +23,37 @@ public class UserResource {
         return userRepository.findByLoginDetails(loginDetails.getString("email"), loginDetails.getString("password"))
                 .map(user -> Response.ok(user.toJson()).build())
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+
+    @POST
+    @Path("/add")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addUser(JsonObject newUser) {
+        User user = User.fromJson(newUser);
+        userRepository.createOrUpdate(user);
+        return Response.ok().build();
+    }
+
+    @PUT
+    @Path("/role")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addRole(JsonObject roleDetails) {
+        boolean found = userRepository.addRole(roleDetails.getString("email"), roleDetails.getString("role"));
+        if (found) {
+            return Response.ok().build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    @GET
+    @Path("/all")
+    public Response getAllUsers() {
+        JsonArray usersArray = userRepository.getAll()
+                .stream()
+                .map(User::toJson)
+                .reduce(Json.createArrayBuilder(), JsonArrayBuilder::add, JsonArrayBuilder::add)
+                .build();
+        return Response.ok(usersArray).build();
     }
 }

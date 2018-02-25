@@ -13,17 +13,17 @@ public class UserRepository {
     @PostConstruct
     public void initUsers() {
         users.put("bilbo@example.org", new User("Bilbo", "Baggins",
-                "bilbo@example.org", "bilbo123", Collections.singletonList("admin")));
+                "bilbo@example.org", "bilbo123", "admin"));
         users.put("frodo@example.org", new User("Frodo", "Baggins",
-                "frodo@example.org", "frodo123", Arrays.asList("author", "subscriber")));
+                "frodo@example.org", "frodo123", "author", "subscriber"));
         users.put("gandalf@example.org", new User("Gandalf", "the Grey",
-                "gandalf@example.org", "gandalf123", Collections.singletonList("author")));
+                "gandalf@example.org", "gandalf123", "author"));
         users.put("aragorn@example.org", new User("Aragorn", "son of Aratorn",
-                "aragorn@example.org", "aragorn123", Collections.singletonList("subscriber")));
+                "aragorn@example.org", "aragorn123", "subscriber"));
         users.put("legolas@example.org", new User("Legolas", "son of Thranduil",
-                "aragorn@example.org", "aragorn123", Collections.singletonList("subscriber")));
+                "aragorn@example.org", "aragorn123", "subscriber"));
         users.put("gimli@example.org", new User("Gimli", "son of Gloin",
-                "gimli@example.org", "gimli123", Collections.emptyList()));
+                "gimli@example.org", "gimli123"));
     }
 
     public Optional<User> findByLoginDetails(String email, String password) {
@@ -33,5 +33,22 @@ public class UserRepository {
         } else {
             return Optional.of(user);
         }
+    }
+
+    public void createOrUpdate(User user) {
+        users.put(user.getEmail(), user);
+    }
+
+    public boolean addRole(String email, String newRole) {
+        User user = users.get(email);
+        if (user == null) {
+            return false;
+        }
+        user.getRoles().add(newRole);
+        return true;
+    }
+
+    public Collection<User> getAll() {
+        return users.values();
     }
 }
