@@ -13,12 +13,13 @@
     <packaging>war</packaging>
     <properties>
         <version.payara>4.1.2.181</version.payara>
+        <mdep.stripVersion>true</mdep.stripVersion>
     </properties>
     <name>Subscribers Microservice (Payara Micro)</name>
 
 
     <build>
-        <finalName>subscribers</finalName>
+        <finalName>ROOT</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>

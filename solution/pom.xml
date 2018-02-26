@@ -123,10 +123,9 @@
                                 </configuration>
                             </execution>
 
-                            <!-- TODO make it run on the root path -->
                             <!-- Start subscribers microservice -->
                             <!-- Running on Payara Micro -->
-                            <!-- Available at http://localhost:9130/subscribers-1.2.0-SNAPSHOT/subscribers -->
+                            <!-- Available at http://localhost:9130/subscribers -->
                             <execution>
                                 <id>subscribers</id>
                                 <phase>pre-integration-test</phase>
@@ -139,7 +138,7 @@
                                     <workingDirectory>subscribers</workingDirectory>
                                     <arguments>
                                         <argument>-jar</argument>
-                                        <argument>target/subscribers-microbundle.jar</argument>
+                                        <argument>target/ROOT-microbundle.jar</argument>
                                         <argument>--port</argument>
                                         <argument>${subscribersPort}</argument>
                                     </arguments>
