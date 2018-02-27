@@ -1,13 +1,18 @@
 package bg.jug.microprofile.hol.subscribers;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import java.io.StringReader;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Created by Dmitry Alexandrov on 26.02.2018.
  */
 public class Subscriber {
 
-    private Long id;
     private String firstName;
     private String lastName;
     private String email;
@@ -26,22 +31,6 @@ public class Subscriber {
         this.subscribedUntil = subscribedUntil;
     }
 
-    public Subscriber(Long id, String firstName, String lastName, String email, String address, LocalDate subscribedUntil) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.address = address;
-        this.subscribedUntil = subscribedUntil;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
     public String getFirstName() {
         return firstName;
     }
@@ -112,5 +101,23 @@ public class Subscriber {
         result = 31 * result + (address != null ? address.hashCode() : 0);
         result = 31 * result + (subscribedUntil != null ? subscribedUntil.hashCode() : 0);
         return result;
+    }
+
+    public JsonObject toJson() {
+        JsonObjectBuilder result = Json.createObjectBuilder();
+        result.add("address",getAddress())
+                .add("email", getEmail())
+                .add("firstName", getFirstName())
+                .add("lastName", getLastName())
+                .add("subscribedUntil", getSubscribedUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+
+        return result.build();
+    }
+
+    public static Subscriber fromJson(String json) {
+        JsonReader reader = Json.createReader(new StringReader(json));
+        JsonObject subscriberObject = reader.readObject();
+        reader.close();
+        return new Subscriber(subscriberObject.getString("firstName"), subscriberObject.getString("lastName"), subscriberObject.getString("email"), subscriberObject.getString("address"), LocalDate.parse(subscriberObject.getString("subscribedUntil"), DateTimeFormatter.ofPattern("yyyy-MM-dd")));
     }
 }

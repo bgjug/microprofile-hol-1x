@@ -1,13 +1,17 @@
 package bg.jug.microprofile.hol.authors;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import java.io.Serializable;
+import java.io.StringReader;
 
 /**
  * Created by Dmitry Alexandrov on 27.02.18.
  */
 public class Author implements Serializable {
 
-    private Long id;
     private String firstName;
     private String lastName;
     private String email;
@@ -24,23 +28,6 @@ public class Author implements Serializable {
         this.email = email;
         this.isRegular = isRegular;
         this.salary = salary;
-    }
-
-    public Author(Long id, String firstName, String lastName, String email, boolean isRegular, int salary) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.isRegular = isRegular;
-        this.salary = salary;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getFirstName() {
@@ -111,12 +98,29 @@ public class Author implements Serializable {
     @Override
     public String toString() {
         return "{" +
-                "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", isRegular=" + isRegular +
                 ", salary=" + salary +
                 '}';
+    }
+
+    public JsonObject toJson(){
+        JsonObjectBuilder result = Json.createObjectBuilder();
+        result.add("lastName",getLastName())
+                .add("firstName",getFirstName())
+                .add("email",getEmail())
+                .add("salary",getSalary())
+                .add("regular",isRegular());
+        return result.build();
+    }
+
+
+    public static Author fromJson(String json){
+        JsonReader reader = Json.createReader(new StringReader(json));
+        JsonObject authorObject = reader.readObject();
+        reader.close();
+        return new Author(authorObject.getString("firstName"),authorObject.getString("lastName"),authorObject.getString("email"),Boolean.valueOf(authorObject.getString("regular")),Integer.valueOf(authorObject.getString("salary")));
     }
 }

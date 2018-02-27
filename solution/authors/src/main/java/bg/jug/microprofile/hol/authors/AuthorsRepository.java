@@ -2,6 +2,13 @@ package bg.jug.microprofile.hol.authors;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,35 +24,24 @@ public class AuthorsRepository {
 
     private AtomicLong sequence = new AtomicLong(0);
 
-    private Map<Long,Author> authors = new HashMap<>();
+    private Map<String,Author> authors = new HashMap<>();
 
     public List<Author> getAuthors(){
         return new ArrayList<>(authors.values());
     }
 
-    public Author findAuthorById(Long authorId){
-        return authors.get(authorId);
+    public Author findAuthorByEmail(String email){
+        return authors.get(email);
     }
 
-    public List<Author> findAuthorByNames(String names){
-        return authors.values().stream().filter(e->(e.getFirstName()+" "+e.getLastName()).contains(names)).collect(Collectors.toList());
-    }
 
     public void addAuthor(Author author){
-        Long authorId = sequence.addAndGet(1);
-        author.setId(authorId);
-
-        authors.put(authorId,author);
+        authors.put(author.getEmail(),author);
     }
     @PostConstruct
     public void addTestData() {
-        Author bilboBaggins = new Author("Bilbo", "Baggins", "bilbo@shire.com", true, 1000);
-        Author spiderman = new Author("Spider", "Man", "spiderman@comics.com", false, 860);
-        Author captainPower = new Author("Captain", "Power", "power@futuresoldiers.com", true, 750);
-
-        addAuthor(bilboBaggins);
-        addAuthor(spiderman);
-        addAuthor(captainPower);
+        Author gandalf = new Author("Gandalf", "the Grey", "gandalf@example.org", true, 1000);
+        addAuthor(gandalf);
     }
 
 }

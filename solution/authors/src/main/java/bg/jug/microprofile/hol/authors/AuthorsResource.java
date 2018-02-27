@@ -5,6 +5,10 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.*;
 import javax.ws.rs.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.StringReader;
 import java.util.List;
@@ -15,6 +19,8 @@ import java.util.List;
 @RequestScoped
 @Path("/")
 public class AuthorsResource {
+
+    private static final String USER_URL = "http://localhost:9100/users";
 
     @Inject
     private AuthorsRepository authorsRepository;
@@ -27,48 +33,40 @@ public class AuthorsResource {
     }
 
     @GET
-    @Path("/findById/{id}")
+    @Path("/findByEmail/{email}")
     @Produces("application/json")
-    public Response findAuthorById(@PathParam("id") Long authorId) {
-        return Response.ok(buildAuthorJson(authorsRepository.findAuthorById(authorId)).build()).build();
+    public Response findAuthorById(@PathParam("email") String email) {
+        return Response.ok((authorsRepository.findAuthorByEmail(email)).toJson()).build();
     }
 
-
-    @GET
-    @Path("/findByNames/{names}")
-    @Produces("application/json")
-    public Response findAuthorByNames(@PathParam("names") final String names) {
-        return Response.ok(buildAuthorJsonArray(authorsRepository.findAuthorByNames(names)).build()).build();
-    }
 
     @POST
-    public void addAuthor(String author) {
-        authorsRepository.addAuthor(readAuthorFromJson(author));
+    public void addAuthor(String authorString) {
+        Author author = Author.fromJson(authorString);
+
+        JsonObject requestBody = Json.createObjectBuilder()
+                .add("email", author.getEmail())
+                .add("role", "author")
+                .build();
+        Client client = ClientBuilder.newClient();
+        Response addResponse = client.target(USER_URL).path("role")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .put(Entity.json(requestBody));
+
+        if (addResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+            //FIXME: is this ok?
+            authorsRepository.addAuthor(author);
+        }
+        client.close();
     }
 
-    private JsonObjectBuilder buildAuthorJson(Author author){
-        JsonObjectBuilder result = Json.createObjectBuilder();
-        result.add("lastName",author.getLastName())
-        .add("firstName",author.getFirstName())
-        .add("email",author.getEmail())
-        .add("salary",author.getSalary())
-        .add("regular",author.isRegular());
-        if (author.getId()!=null) result.add("id",author.getId());
-        return result;
-    }
 
     private JsonArrayBuilder buildAuthorJsonArray(List<Author> authors){
         JsonArrayBuilder result = Json.createArrayBuilder();
         authors.forEach(e->{
-            result.add(buildAuthorJson(e));
+            result.add(e.toJson());
         });
         return result;
     }
 
-    private Author readAuthorFromJson(String json){
-        JsonReader reader = Json.createReader(new StringReader(json));
-        JsonObject authorObject = reader.readObject();
-        reader.close();
-        return new Author(Long.valueOf(authorObject.getString("id")),authorObject.getString("firstName"),authorObject.getString("lastName"),authorObject.getString("email"),Boolean.valueOf(authorObject.getString("regular")),Integer.valueOf(authorObject.getString("salary")));
-    }
 }
