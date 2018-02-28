@@ -51,6 +51,9 @@
 
         <profile>
             <id>start</id>
+            <properties>
+                <runAsync>true</runAsync>
+            </properties>
             <build>
                 <defaultGoal>pre-integration-test</defaultGoal>
 
@@ -58,6 +61,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
                         <executions>
 
                             <!-- Start users microservice -->
@@ -70,7 +74,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <async>true</async>
+                                    <async>${runAsync}</async>
                                     <executable>java</executable>
                                     <workingDirectory>users</workingDirectory>
                                     <arguments>
@@ -92,7 +96,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <async>true</async>
+                                    <async>${runAsync}</async>
                                     <executable>java</executable>
                                     <workingDirectory>authors</workingDirectory>
                                     <arguments>
@@ -113,7 +117,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <async>true</async>
+                                    <async>${runAsync}</async>
                                     <executable>java</executable>
                                     <workingDirectory>content</workingDirectory>
                                     <arguments>
@@ -133,7 +137,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <async>true</async>
+                                    <async>${runAsync}</async>
                                     <executable>java</executable>
                                     <workingDirectory>subscribers</workingDirectory>
                                     <arguments>
