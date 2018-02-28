@@ -9,10 +9,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -22,25 +19,22 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class AuthorsRepository {
 
-    private AtomicLong sequence = new AtomicLong(0);
-
     private Map<String,Author> authors = new HashMap<>();
 
     public List<Author> getAuthors(){
         return new ArrayList<>(authors.values());
     }
 
-    public Author findAuthorByEmail(String email){
-        return authors.get(email);
+    public Optional<Author> findAuthorByEmail(String email){
+        return Optional.ofNullable(authors.get(email));
     }
-
 
     public void addAuthor(Author author){
         authors.put(author.getEmail(),author);
     }
     @PostConstruct
     public void addTestData() {
-        Author gandalf = new Author("Gandalf", "the Grey", "gandalf@example.org", true, 1000);
+        Author gandalf = new Author("Gandalf", "the Grey", "gandalf@example.org", "very very old!", 1000);
         addAuthor(gandalf);
     }
 

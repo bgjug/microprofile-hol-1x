@@ -15,18 +15,19 @@ public class Author implements Serializable {
     private String firstName;
     private String lastName;
     private String email;
-    private boolean isRegular;
+    private String bio;
     private int salary;
 
     public Author() {
         // empty constructor
     }
 
-    public Author(String firstName, String lastName, String email, boolean isRegular, int salary) {
+    public Author(String firstName, String lastName, String email, String bio, int salary) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.isRegular = isRegular;
+        this.bio = bio
+        ;
         this.salary = salary;
     }
 
@@ -54,12 +55,12 @@ public class Author implements Serializable {
         this.email = email;
     }
 
-    public boolean isRegular() {
-        return isRegular;
+    public String getBio() {
+        return bio;
     }
 
-    public void setRegular(boolean regular) {
-        isRegular = regular;
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public int getSalary() {
@@ -77,7 +78,7 @@ public class Author implements Serializable {
 
         Author author = (Author) o;
 
-        if (isRegular != author.isRegular) return false;
+        if (bio != author.bio) return false;
         if (salary != author.salary) return false;
         if (!firstName.equals(author.firstName)) return false;
         if (!lastName.equals(author.lastName)) return false;
@@ -90,7 +91,7 @@ public class Author implements Serializable {
         int result = firstName.hashCode();
         result = 31 * result + lastName.hashCode();
         result = 31 * result + email.hashCode();
-        result = 31 * result + (isRegular ? 1 : 0);
+        result = 31 * result + firstName.hashCode();
         result = 31 * result + salary;
         return result;
     }
@@ -101,7 +102,7 @@ public class Author implements Serializable {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", isRegular=" + isRegular +
+                ", bio=" + bio  + '\'' +
                 ", salary=" + salary +
                 '}';
     }
@@ -112,7 +113,7 @@ public class Author implements Serializable {
                 .add("firstName",getFirstName())
                 .add("email",getEmail())
                 .add("salary",getSalary())
-                .add("regular",isRegular());
+                .add("bio",getBio());
         return result.build();
     }
 
@@ -121,6 +122,6 @@ public class Author implements Serializable {
         JsonReader reader = Json.createReader(new StringReader(json));
         JsonObject authorObject = reader.readObject();
         reader.close();
-        return new Author(authorObject.getString("firstName"),authorObject.getString("lastName"),authorObject.getString("email"),Boolean.valueOf(authorObject.getString("regular")),Integer.valueOf(authorObject.getString("salary")));
+        return new Author(authorObject.getString("firstName"),authorObject.getString("lastName"),authorObject.getString("email"),authorObject.getString("bio"),Integer.valueOf(authorObject.getString("salary")));
     }
 }

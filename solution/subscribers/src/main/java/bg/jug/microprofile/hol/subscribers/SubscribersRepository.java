@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -16,16 +17,14 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class SubscribersRepository {
 
-    private AtomicLong sequence = new AtomicLong(0);
-
     private Map<String, Subscriber> subscribers = new HashMap<>();
 
     public List<Subscriber> getSubscribers() {
         return subscribers.values().stream().collect(Collectors.toList());
     }
 
-    public Subscriber findSubscriberByEmail(String email) {
-        return subscribers.get(email);
+    public Optional<Subscriber> findSubscriberByEmail(String email) {
+        return Optional.ofNullable(subscribers.get(email));
     }
 
 
@@ -42,12 +41,9 @@ public class SubscribersRepository {
                 "aragorn@example.org",  "Stamford Bridge 64", LocalDate.of(2017, 3, 15));
         Subscriber legolas = new Subscriber("Legolas", "son of Thranduil",
                 "aragorn@example.org","Old Trafford 89", LocalDate.of(2017, 12, 1));
-        Subscriber gimli = new Subscriber("Gimli", "son of Gloin",
-                "gimli@example.org", "Highburry 122", LocalDate.of(2017, 3, 2));
 
         addSubscriber(frodoBaggins);
         addSubscriber(aragornSonOfAragorn);
         addSubscriber(legolas);
-        addSubscriber(gimli);
     }
 }

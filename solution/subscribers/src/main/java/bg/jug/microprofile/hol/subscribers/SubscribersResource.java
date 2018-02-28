@@ -28,16 +28,14 @@ public class SubscribersResource {
 
     @GET
     @Path("/all")
-    @Produces("application/json")
     public Response getSubscribers() {
         return Response.ok(buildSubscriberJsonArray(subscribersRepository.getSubscribers()).build()).build();
     }
 
     @GET
     @Path("/findByEmail/{email}")
-    @Produces("application/json")
     public Response findSubscriberById(@PathParam("email") String email) {
-        return Response.ok(subscribersRepository.findSubscriberByEmail(email).toJson()).build();
+        return ( subscribersRepository.findSubscriberByEmail(email)).map(subscriber -> Response.ok(subscriber.toJson()).build()).orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
 

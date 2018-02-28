@@ -27,16 +27,14 @@ public class AuthorsResource {
 
     @GET
     @Path("/all")
-    @Produces("application/json")
     public Response getAuthors() {
         return Response.ok(buildAuthorJsonArray(authorsRepository.getAuthors()).build()).build();
     }
 
     @GET
     @Path("/findByEmail/{email}")
-    @Produces("application/json")
     public Response findAuthorById(@PathParam("email") String email) {
-        return Response.ok((authorsRepository.findAuthorByEmail(email)).toJson()).build();
+        return (authorsRepository.findAuthorByEmail(email)).map(author -> Response.ok(author.toJson()).build()).orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
 
