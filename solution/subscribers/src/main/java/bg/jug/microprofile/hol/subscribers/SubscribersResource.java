@@ -42,7 +42,7 @@ public class SubscribersResource {
 
     @POST
     @Path("/add")
-    public void addSubscriber(String subscriberString) {
+    public Response addSubscriber(String subscriberString) {
         Subscriber subscriber = Subscriber.fromJson(subscriberString);
 
         JsonObject requestBody = Json.createObjectBuilder()
@@ -58,6 +58,7 @@ public class SubscribersResource {
             subscribersRepository.addSubscriber(subscriber);
         }
         client.close();
+        return Response.ok().build();
     }
 
     // Helpers

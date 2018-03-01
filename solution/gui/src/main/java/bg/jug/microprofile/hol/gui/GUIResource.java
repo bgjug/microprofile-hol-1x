@@ -4,6 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
@@ -11,14 +12,19 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class GUIResource {
 
-    private static final String USER_URL = "http://localhost:9100/users";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private static final String USERS_URL = "http://localhost:9100/users";
     private static final String CONTENT_URL = "http://localhost:9120/content";
+    private static final String SUBSCRIBERS_URL = "http://localhost:9130/subscribers";
 
     @Inject
     private UserContext userContext;
@@ -33,7 +39,7 @@ public class GUIResource {
                 .add("password", password)
                 .build();
         Client client = ClientBuilder.newClient();
-        Response loginResponse = client.target(USER_URL).path("find")
+        Response loginResponse = client.target(USERS_URL).path("find")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(requestBody));
 
@@ -49,7 +55,7 @@ public class GUIResource {
     @Path("/register")
     public Response register(JsonObject newUser) {
         Client client = ClientBuilder.newClient();
-        Response loginResponse = client.target(USER_URL).path("add")
+        Response loginResponse = client.target(USERS_URL).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(newUser));
 
@@ -61,15 +67,20 @@ public class GUIResource {
     }
 
     @GET
+    @Path("/nonsubscribers")
+    public Response getAllNonSubscribers() {
+        Response allUsers = getAllEntities(USERS_URL);
+        JsonArray nonSubscribers = allUsers.readEntity(JsonArray.class).stream()
+                .filter(v -> !((JsonObject) v).getJsonArray("roles").toString().contains("subscriber"))
+                .reduce(Json.createArrayBuilder(), JsonArrayBuilder::add, JsonArrayBuilder::add)
+                .build();
+        return Response.ok(nonSubscribers).build();
+    }
+
+    @GET
     @Path("/articles")
     public Response getAllArticles() {
-        Client client = ClientBuilder.newClient();
-        Response articlesResponse = client.target(CONTENT_URL).path("all")
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .get();
-        JsonArray responseData = articlesResponse.readEntity(JsonArray.class);
-        client.close();
-        return Response.ok(responseData).build();
+        return getAllEntities(CONTENT_URL);
     }
 
     @GET
@@ -103,6 +114,33 @@ public class GUIResource {
         return client.target(CONTENT_URL).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(sendJson));
+    }
+
+    @POST
+    @Path("/subscriber")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addSubscriber(JsonObject userJson) {
+        JsonObject subscriberJson = Json.createObjectBuilder()
+                .add("email", userJson.getString("email"))
+                .add("firstName", userJson.getString("firstName"))
+                .add("lastName", userJson.getString("lastName"))
+                .add("subscribedUntil", LocalDate.now().plusMonths(6).format(DATE_TIME_FORMATTER))
+                .build();
+
+        Client client = ClientBuilder.newClient();
+        return client.target(SUBSCRIBERS_URL).path("add")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(subscriberJson));
+    }
+
+    private Response getAllEntities(String rootUrl) {
+        Client client = ClientBuilder.newClient();
+        Response response = client.target(rootUrl).path("all")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
+        JsonArray responseData = response.readEntity(JsonArray.class);
+        client.close();
+        return Response.ok(responseData).build();
     }
 
 }
