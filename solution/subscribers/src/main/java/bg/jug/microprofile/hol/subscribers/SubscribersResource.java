@@ -35,11 +35,13 @@ public class SubscribersResource {
     @GET
     @Path("/findByEmail/{email}")
     public Response findSubscriberById(@PathParam("email") String email) {
-        return ( subscribersRepository.findSubscriberByEmail(email)).map(subscriber -> Response.ok(subscriber.toJson()).build()).orElse(Response.status(Response.Status.NOT_FOUND).build());
+        return (subscribersRepository.findSubscriberByEmail(email))
+                .map(subscriber -> Response.ok(subscriber.toJson()).build())
+                .orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
-
     @POST
+    @Path("/add")
     public void addSubscriber(String subscriberString) {
         Subscriber subscriber = Subscriber.fromJson(subscriberString);
 
@@ -53,7 +55,6 @@ public class SubscribersResource {
                 .put(Entity.json(requestBody));
 
         if (addResponse.getStatus() == Response.Status.OK.getStatusCode()) {
-            //FIXME: is this ok?
             subscribersRepository.addSubscriber(subscriber);
         }
         client.close();
@@ -62,9 +63,7 @@ public class SubscribersResource {
     // Helpers
     private JsonArrayBuilder buildSubscriberJsonArray(List<Subscriber> subscribers) {
         JsonArrayBuilder result = Json.createArrayBuilder();
-        subscribers.forEach(e -> {
-            result.add(e.toJson());
-        });
+        subscribers.forEach(e -> result.add(e.toJson()));
         return result;
     }
 
