@@ -89,4 +89,20 @@ public class GUIResource {
         return response;
     }
 
+    @POST
+    @Path("/article")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addArticle(JsonObject articleJson) {
+        JsonObject sendJson = Json.createObjectBuilder()
+                .add("title", articleJson.getString("title"))
+                .add("content", articleJson.getString("content"))
+                .add("author", userContext.getLoggedUser().getEmail())
+                .build();
+
+        Client client = ClientBuilder.newClient();
+        return client.target(CONTENT_URL).path("add")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(sendJson));
+    }
+
 }
