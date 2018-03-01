@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Magazine Manager</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="css/sb-admin-2.css" rel="stylesheet"/>
+</head>
+
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="login-panel panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Welcome to Magazine Manager</h3>
+                </div>
+                <div class="panel-body">
+                    <form method="post" action="#" role="form">
+                        <fieldset>
+                            <div id="emailFormGroup" class="form-group">
+                                <input id="email" type="email" name="email" class="form-control" placeholder="email"/>
+                            </div>
+                            <div id="passwordFormGroup" class="form-group">
+                                <input id="password" type="password" name="password" class="form-control" placeholder="Pasword"/>
+                            </div>
+                            <div id="retypePasswordFormGroup" class="form-group">
+                                <label id="retypePasswordMessage" style="display:none" class="control-label" for="retypePassword"></label>
+                                <input id="retypePassword" type="password" name="retypePassword" class="form-control" placeholder="Retype pasword"/>
+                            </div>
+                            <div id="firstNameFormGroup" class="form-group">
+                                <input id="firstName" type="text" name="firstName" class="form-control" placeholder="First name"/>
+                            </div>
+                            <div id="lastNameFormGroup" class="form-group">
+                                <input id="lastName" type="text" name="lastName" class="form-control" placeholder="Last name"/>
+                            </div>
+                            <input id="register" class="btn btn-lg btn-success btn-block" type="button" value="Register"/>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script>
+    $(function() {
+        $("input").keyup(function(event){
+            if(event.keyCode == 13){
+                $("#register").click();
+            }
+        });
+
+        $("#register").click(function() {
+            $(".control-label").hide();
+            $(".has-error").removeClass("has-error");
+            var password = $("#password").val();
+            var retypePassword = $("#retypePassword").val();
+            if (password !== retypePassword) {
+                highlightViolatedControl("retypePassword", "Passwords don't match");
+                return false;
+            }
+
+            var payload = {
+                email: $("#email").val(),
+                password: password,
+                firstName: $("#firstName").val(),
+                lastName: $("#lastName").val(),
+                roles: []
+            };
+            $.ajax("gui/register",
+                {
+                    type: "POST",
+                    accepts: {
+                        json: "application/json"
+                    },
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    statusCode: {
+                        200: function () {
+                            window.location.replace("viewArticles.html");
+                        }
+                    }
+                }
+            );
+        });
+    });
+
+    function highlightViolatedControl(controlId, errorMessage) {
+        $("#" + controlId + "FormGroup").addClass("has-error");
+        const messageElement = $("#" + controlId + "Message");
+        messageElement.show();
+        messageElement.text(errorMessage);
+    }
+
+</script>
+</body>
+</html>

@@ -44,6 +44,22 @@ public class GUIResource {
         return loginResponse;
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/register")
+    public Response register(JsonObject newUser) {
+        Client client = ClientBuilder.newClient();
+        Response loginResponse = client.target(USER_URL).path("add")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(newUser));
+
+        if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+            userContext.setLoggedUser(User.fromJson(newUser));
+        }
+        client.close();
+        return loginResponse;
+    }
+
     @GET
     @Path("/articles")
     public Response getAllArticles() {
