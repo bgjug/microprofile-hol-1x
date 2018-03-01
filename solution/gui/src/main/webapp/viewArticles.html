@@ -59,7 +59,7 @@
     });
 
     function loadArticle(id) {
-        $.ajax("gui/articles/" + id,
+        $.ajax("gui/article/" + id,
             {
                 type: "GET",
                 dataType: "json",
@@ -69,7 +69,7 @@
                         $("#view").load("viewArticle.html", null, function() {
                             $("#title").text(article.title);
                             $("#content").html(article.content);
-                            $("#author").text(article.author.firstName + " " + article.author.lastName);
+                            // TODO add the author
                         });
                     }
                 }

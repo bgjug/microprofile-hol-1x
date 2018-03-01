@@ -56,4 +56,21 @@ public class GUIResource {
         return Response.ok(responseData).build();
     }
 
+    @GET
+    @Path("/article/{id}")
+    public Response findArticleById(@PathParam("id") Long articleId) {
+        Client client = ClientBuilder.newClient();
+        Response articleResponse = client.target(CONTENT_URL).path("findById/" + articleId)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
+        Response response;
+        if (articleResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+            response = Response.ok(articleResponse.readEntity(JsonObject.class)).build();
+        } else {
+            response = Response.status(Response.Status.NOT_FOUND).build();
+        }
+        client.close();
+        return response;
+    }
+
 }
