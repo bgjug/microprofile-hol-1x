@@ -85,7 +85,6 @@
                                 </configuration>
                             </execution>
 
-                            <!-- TODO still not running -->
                             <!-- Start authors microservice -->
                             <!-- Running on Hammock -->
                             <!-- Available at http://localhost:9110/authors -->
@@ -101,8 +100,8 @@
                                     <workingDirectory>authors</workingDirectory>
                                     <arguments>
                                         <argument>-jar</argument>
-                                        <argument>target/authors.jar</argument>
-                                        <argument>-Dwebserver.port=${authorsPort}</argument>
+                                        <argument>target/authors-capsule.jar</argument>
+                                        <argument>--webserver.port=${authorsPort}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
