@@ -28,7 +28,7 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>1.5.1</version>
                 <executions>
                     <execution>
                         <goals>
