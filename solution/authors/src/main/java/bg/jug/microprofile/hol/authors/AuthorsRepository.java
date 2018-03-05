@@ -34,8 +34,12 @@ public class AuthorsRepository {
     }
     @PostConstruct
     public void addTestData() {
-        Author gandalf = new Author("Gandalf", "the Grey", "gandalf@example.org", "very very old!", 1000);
+        Author gandalf = new Author("Gandalf", "the Grey", "gandalf@example.org",
+                "very very old!", 1000);
+        Author frodo = new Author("Frodo", "Baggins", "frodo@example.org",
+                "don't touch my precious!", 750);
         addAuthor(gandalf);
+        addAuthor(frodo);
     }
 
 }

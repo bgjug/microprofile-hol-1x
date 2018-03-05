@@ -99,6 +99,8 @@
                                     <executable>java</executable>
                                     <workingDirectory>authors</workingDirectory>
                                     <arguments>
+                                        <argument>-Dorg.jboss.weld.se.archive.isolation=false</argument>
+                                        <argument>-Dcxf.enable.sse.transport=true</argument>
                                         <argument>-jar</argument>
                                         <argument>target/authors-capsule.jar</argument>
                                         <argument>--webserver.port=${authorsPort}</argument>
