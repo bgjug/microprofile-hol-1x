@@ -23,6 +23,7 @@ public class GUIResource {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private static final String USERS_URL = "http://localhost:9100/users";
+    private static final String AUTHORS_URL = "http://localhost:9110/authors";
     private static final String CONTENT_URL = "http://localhost:9120/content";
     private static final String SUBSCRIBERS_URL = "http://localhost:9130/subscribers";
 
@@ -69,9 +70,19 @@ public class GUIResource {
     @GET
     @Path("/nonsubscribers")
     public Response getAllNonSubscribers() {
+        return buildUsersWithoutRole("subscriber");
+    }
+
+    @GET
+    @Path("/nonauthors")
+    public Response getAllNonAuthors() {
+        return buildUsersWithoutRole("author");
+    }
+
+    private Response buildUsersWithoutRole(String missingRole) {
         Response allUsers = getAllEntities(USERS_URL);
         JsonArray nonSubscribers = allUsers.readEntity(JsonArray.class).stream()
-                .filter(v -> !((JsonObject) v).getJsonArray("roles").toString().contains("subscriber"))
+                .filter(v -> !((JsonObject) v).getJsonArray("roles").toString().contains(missingRole))
                 .reduce(Json.createArrayBuilder(), JsonArrayBuilder::add, JsonArrayBuilder::add)
                 .build();
         return Response.ok(nonSubscribers).build();
@@ -128,9 +139,23 @@ public class GUIResource {
                 .build();
 
         Client client = ClientBuilder.newClient();
-        return client.target(SUBSCRIBERS_URL).path("add")
+        Response addSubscriberResponse = client.target(SUBSCRIBERS_URL).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(subscriberJson));
+        client.close();
+        return addSubscriberResponse;
+    }
+
+    @POST
+    @Path("/author")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addAuthor(JsonObject authorJson) {
+        Client client = ClientBuilder.newClient();
+        Response addAuthorResponse = client.target(AUTHORS_URL).path("add")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(authorJson));
+        client.close();
+        return addAuthorResponse;
     }
 
     private Response getAllEntities(String rootUrl) {

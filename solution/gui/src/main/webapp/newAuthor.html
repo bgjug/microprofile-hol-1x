@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Magazine Manager</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="css/sb-admin-2.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+    <div class="navbar-header">
+        <a href="viewArticles.html"><img src="img/magman.png"/></a>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">New Author</h1>
+        </div>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="#" role="form">
+            <fieldset>
+                <div class="form-group">
+                    <label for="users">User</label>
+                    <select id="users" name="users"></select>
+                </div>
+                <div class="form-group">
+                    <label for="salary">Salary</label>
+                    <input id="salary" class="form-control" type="number" name="salary">
+                </div>
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" class="form-control" rows="20"></textarea>
+                </div>
+                <input id="submit" class="btn btn-success" type="button" value="Add">
+            </fieldset>
+        </form>
+    </div>
+
+</div>
+<script src="js/jquery.min.js"></script>
+<script>
+    $(function() {
+        $.ajax("gui/nonauthors",
+            {
+                type: "GET",
+                dataType: "json",
+                statusCode: {
+                    200: function(nonauthors) {
+                        updateDropDown(nonauthors);
+                    }
+                }
+            }
+        );
+        
+        $("#submit").click(function () {
+            var selectedUser = JSON.parse($("#users").val());
+            selectedUser.bio = $("#bio").val();
+            selectedUser.salary = parseInt($("#salary").val(), 10);
+            $.ajax("gui/author",
+                {
+                    type: "POST",
+                    accepts: {
+                        json: "application/json"
+                    },
+                    contentType: "application/json",
+                    data: JSON.stringify(selectedUser),
+                    statusCode: {
+                        200: function() {
+                            window.location.replace("viewArticles.html");
+                        }
+                    }
+                }
+            );
+        })
+    });
+
+    function updateDropDown(usersArray) {
+        $.each(usersArray, function(index) {
+            var user = usersArray[index];
+            $('#users')
+                .append($("<option></option>")
+                    .attr("value", JSON.stringify(user))
+                    .text(user.firstName + " " + user.lastName));
+        });
+    }
+
+</script>
+</body>
+</html>
