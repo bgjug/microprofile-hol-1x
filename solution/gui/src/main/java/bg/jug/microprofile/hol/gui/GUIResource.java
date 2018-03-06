@@ -2,7 +2,6 @@ package bg.jug.microprofile.hol.gui;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -27,16 +26,16 @@ public class GUIResource {
 
     @Inject
     @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
-    private String USERS_URL;
+    private String usersUrl;
     @Inject
     @ConfigProperty(name = "users.authors.url", defaultValue = "http://localhost:9110/authors")
-    private String AUTHORS_URL;
+    private String authorsUrl;
     @Inject
     @ConfigProperty(name = "users.content.url", defaultValue = "http://localhost:9120/content")
-    private String CONTENT_URL;
+    private String contentUrl;
     @Inject
     @ConfigProperty(name = "users.subscribers.url", defaultValue = "http://localhost:9130/subscribers")
-    private String SUBSCRIBERS_URL;
+    private String subscribersUrl;
 
     @Inject
     private UserContext userContext;
@@ -51,7 +50,7 @@ public class GUIResource {
                 .add("password", password)
                 .build();
         Client client = ClientBuilder.newClient();
-        Response loginResponse = client.target(USERS_URL).path("find")
+        Response loginResponse = client.target(usersUrl).path("find")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(requestBody));
 
@@ -67,7 +66,7 @@ public class GUIResource {
     @Path("/register")
     public Response register(JsonObject newUser) {
         Client client = ClientBuilder.newClient();
-        Response loginResponse = client.target(USERS_URL).path("add")
+        Response loginResponse = client.target(usersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(newUser));
 
@@ -91,7 +90,7 @@ public class GUIResource {
     }
 
     private Response buildUsersWithoutRole(String missingRole) {
-        Response allUsers = getAllEntities(USERS_URL);
+        Response allUsers = getAllEntities(usersUrl);
         JsonArray nonSubscribers = allUsers.readEntity(JsonArray.class).stream()
                 .filter(v -> !((JsonObject) v).getJsonArray("roles").toString().contains(missingRole))
                 .reduce(Json.createArrayBuilder(), JsonArrayBuilder::add, JsonArrayBuilder::add)
@@ -102,14 +101,14 @@ public class GUIResource {
     @GET
     @Path("/articles")
     public Response getAllArticles() {
-        return getAllEntities(AUTHORS_URL);
+        return getAllEntities(contentUrl);
     }
 
     @GET
     @Path("/article/{id}")
     public Response findArticleById(@PathParam("id") Long articleId) {
         Client client = ClientBuilder.newClient();
-        Response articleResponse = client.target(CONTENT_URL).path("findById/" + articleId)
+        Response articleResponse = client.target(contentUrl).path("findById/" + articleId)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .get();
         Response response;
@@ -133,7 +132,7 @@ public class GUIResource {
                 .build();
 
         Client client = ClientBuilder.newClient();
-        return client.target(CONTENT_URL).path("add")
+        return client.target(contentUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(sendJson));
     }
@@ -150,7 +149,7 @@ public class GUIResource {
                 .build();
 
         Client client = ClientBuilder.newClient();
-        Response addSubscriberResponse = client.target(SUBSCRIBERS_URL).path("add")
+        Response addSubscriberResponse = client.target(subscribersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(subscriberJson));
         client.close();
@@ -162,7 +161,7 @@ public class GUIResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addAuthor(JsonObject authorJson) {
         Client client = ClientBuilder.newClient();
-        Response addAuthorResponse = client.target(AUTHORS_URL).path("add")
+        Response addAuthorResponse = client.target(authorsUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(authorJson));
         client.close();

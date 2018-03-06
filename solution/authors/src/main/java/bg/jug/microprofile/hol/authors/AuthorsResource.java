@@ -28,7 +28,7 @@ public class AuthorsResource {
 
     @Inject
     @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
-    private String USER_URL;
+    private String usersUrl;
 
     @Inject
     private AuthorsRepository authorsRepository;
@@ -63,7 +63,7 @@ public class AuthorsResource {
          * runtime, so we need to do this manually
          */
         client.register(JohnzonExtension.class);
-        Response addResponse = client.target(USER_URL)
+        Response addResponse = client.target(usersUrl)
                 .path("role")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .put(Entity.json(requestBody));

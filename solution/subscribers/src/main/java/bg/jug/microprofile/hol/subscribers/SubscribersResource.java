@@ -25,7 +25,7 @@ public class SubscribersResource {
 
     @Inject
     @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
-    private String USER_URL;
+    private String usersUrl;
 
     @Inject
     private SubscribersRepository subscribersRepository;
@@ -54,7 +54,7 @@ public class SubscribersResource {
                 .add("role", "subscriber")
                 .build();
         Client client = ClientBuilder.newClient();
-        Response addResponse = client.target(USER_URL).path("role")
+        Response addResponse = client.target(usersUrl).path("role")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .put(Entity.json(requestBody));
 
