@@ -1,5 +1,7 @@
 package bg.jug.microprofile.hol.subscribers;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -21,7 +23,9 @@ import java.util.List;
 @RequestScoped
 public class SubscribersResource {
 
-    private static final String USER_URL = "http://localhost:9100/users";
+    @Inject
+    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    private String USER_URL;
 
     @Inject
     private SubscribersRepository subscribersRepository;

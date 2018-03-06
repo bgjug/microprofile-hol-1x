@@ -1,5 +1,8 @@
 package bg.jug.microprofile.hol.gui;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -22,10 +25,18 @@ public class GUIResource {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private static final String USERS_URL = "http://localhost:9100/users";
-    private static final String AUTHORS_URL = "http://localhost:9110/authors";
-    private static final String CONTENT_URL = "http://localhost:9120/content";
-    private static final String SUBSCRIBERS_URL = "http://localhost:9130/subscribers";
+    @Inject
+    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    private String USERS_URL;
+    @Inject
+    @ConfigProperty(name = "users.authors.url", defaultValue = "http://localhost:9110/authors")
+    private String AUTHORS_URL;
+    @Inject
+    @ConfigProperty(name = "users.content.url", defaultValue = "http://localhost:9120/content")
+    private String CONTENT_URL;
+    @Inject
+    @ConfigProperty(name = "users.subscribers.url", defaultValue = "http://localhost:9130/subscribers")
+    private String SUBSCRIBERS_URL;
 
     @Inject
     private UserContext userContext;
@@ -91,7 +102,7 @@ public class GUIResource {
     @GET
     @Path("/articles")
     public Response getAllArticles() {
-        return getAllEntities(CONTENT_URL);
+        return getAllEntities(AUTHORS_URL);
     }
 
     @GET

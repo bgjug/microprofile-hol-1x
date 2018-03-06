@@ -1,5 +1,6 @@
 package bg.jug.microprofile.hol.authors;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import ws.ament.hammock.johnzon.JohnzonExtension;
 
 import javax.enterprise.context.RequestScoped;
@@ -25,7 +26,9 @@ import java.util.List;
 @Path("/")
 public class AuthorsResource {
 
-    private static final String USER_URL = "http://localhost:9100/users";
+    @Inject
+    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    private String USER_URL;
 
     @Inject
     private AuthorsRepository authorsRepository;
