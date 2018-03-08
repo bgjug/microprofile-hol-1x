@@ -24,7 +24,7 @@ import java.util.List;
 public class SubscribersResource {
 
     @Inject
-    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
     private String usersUrl;
 
     @Inject

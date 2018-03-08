@@ -25,16 +25,16 @@ public class GUIResource {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Inject
-    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
     private String usersUrl;
     @Inject
-    @ConfigProperty(name = "users.authors.url", defaultValue = "http://localhost:9110/authors")
+    @ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:9110/authors")
     private String authorsUrl;
     @Inject
-    @ConfigProperty(name = "users.content.url", defaultValue = "http://localhost:9120/content")
+    @ConfigProperty(name = "contentServiceUrl", defaultValue = "http://localhost:9120/content")
     private String contentUrl;
     @Inject
-    @ConfigProperty(name = "users.subscribers.url", defaultValue = "http://localhost:9130/subscribers")
+    @ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:9130/subscribers")
     private String subscribersUrl;
 
     @Inject

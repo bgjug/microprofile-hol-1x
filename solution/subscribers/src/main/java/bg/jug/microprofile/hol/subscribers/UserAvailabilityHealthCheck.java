@@ -16,7 +16,7 @@ import javax.ws.rs.client.ClientBuilder;
 public class UserAvailabilityHealthCheck implements HealthCheck {
 
     @Inject
-    @ConfigProperty(name = "users.service.url", defaultValue = "http://localhost:9100/users")
+    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
     private String usersUrl;
 
     @Override
