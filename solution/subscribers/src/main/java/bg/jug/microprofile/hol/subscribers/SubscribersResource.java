@@ -1,7 +1,9 @@
 package bg.jug.microprofile.hol.subscribers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.annotation.Metered;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -20,7 +22,7 @@ import java.util.List;
  */
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
-@RequestScoped
+@ApplicationScoped
 public class SubscribersResource {
 
     @Inject
@@ -46,6 +48,7 @@ public class SubscribersResource {
 
     @POST
     @Path("/add")
+    @Metered(name = "Subscriber added")
     public Response addSubscriber(String subscriberString) {
         Subscriber subscriber = Subscriber.fromJson(subscriberString);
 

@@ -1,5 +1,7 @@
 package bg.jug.microprofile.hol.users;
 
+import org.eclipse.microprofile.metrics.annotation.Metered;
+
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -28,6 +30,7 @@ public class UserResource {
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Metered(name="User created or updated")
     public Response addUser(JsonObject newUser) {
         User user = User.fromJson(newUser);
         userRepository.createOrUpdate(user);
@@ -37,6 +40,7 @@ public class UserResource {
     @PUT
     @Path("/role")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Metered(name = "Role added to mail")
     public Response addRole(JsonObject roleDetails) {
         boolean found = userRepository.addRole(roleDetails.getString("email"), roleDetails.getString("role"));
         if (found) {

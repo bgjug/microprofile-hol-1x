@@ -1,5 +1,7 @@
 package bg.jug.microprofile.hol.subscribers;
 
+import org.eclipse.microprofile.metrics.annotation.Metered;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.time.LocalDate;
