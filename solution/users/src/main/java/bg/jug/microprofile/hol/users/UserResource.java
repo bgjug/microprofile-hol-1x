@@ -23,7 +23,7 @@ public class UserResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response findUserByEmailAndPassword(JsonObject loginDetails) {
         return userRepository.findByLoginDetails(loginDetails.getString("email"), loginDetails.getString("password"))
-                .map(user -> Response.ok(user.toJson()).build())
+                .map(user -> Response.ok(user.toJson()).header("Authorization", "Bearer " + JwtUtils.generateJWT(user)).build())
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
@@ -34,7 +34,7 @@ public class UserResource {
     public Response addUser(JsonObject newUser) {
         User user = User.fromJson(newUser);
         userRepository.createOrUpdate(user);
-        return Response.ok().build();
+        return Response.ok().header("Authorization", "Bearer " + JwtUtils.generateJWT(user)).build();
     }
 
     @PUT
