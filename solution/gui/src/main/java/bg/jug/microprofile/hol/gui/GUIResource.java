@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 public class GUIResource {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     @Inject
     @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
@@ -56,6 +57,7 @@ public class GUIResource {
 
         if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
             userContext.setLoggedUser(User.fromJson(loginResponse.readEntity(JsonObject.class)));
+            userContext.setUserJWT(loginResponse.getHeaderString(AUTHORIZATION_HEADER));
         }
         client.close();
         return loginResponse;
@@ -66,15 +68,16 @@ public class GUIResource {
     @Path("/register")
     public Response register(JsonObject newUser) {
         Client client = ClientBuilder.newClient();
-        Response loginResponse = client.target(usersUrl).path("add")
+        Response registerResponse = client.target(usersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(newUser));
 
-        if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+        if (registerResponse.getStatus() == Response.Status.OK.getStatusCode()) {
             userContext.setLoggedUser(User.fromJson(newUser));
+            userContext.setUserJWT(registerResponse.getHeaderString(AUTHORIZATION_HEADER));
         }
         client.close();
-        return loginResponse;
+        return registerResponse;
     }
 
     @GET
@@ -134,6 +137,7 @@ public class GUIResource {
         Client client = ClientBuilder.newClient();
         return client.target(contentUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
+                .header(AUTHORIZATION_HEADER, userContext.getUserJWT())
                 .post(Entity.json(sendJson));
     }
 
@@ -151,6 +155,7 @@ public class GUIResource {
         Client client = ClientBuilder.newClient();
         Response addSubscriberResponse = client.target(subscribersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
+                .header(AUTHORIZATION_HEADER, userContext.getUserJWT())
                 .post(Entity.json(subscriberJson));
         client.close();
         return addSubscriberResponse;

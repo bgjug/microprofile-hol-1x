@@ -29,7 +29,7 @@ public class LoggedUserFilter implements Filter {
         String reqURI = httpRequest.getRequestURI();
         String contextPath = httpRequest.getContextPath();
 
-        if (userContext.getLoggedUser() != null || WHITE_LIST.stream().anyMatch(reqURI.toLowerCase()::contains)) {
+        if (userContext.getUserJWT() != null || WHITE_LIST.stream().anyMatch(reqURI.toLowerCase()::contains)) {
             chain.doFilter(request, response);
         } else {
             ((HttpServletResponse) response).sendRedirect(contextPath + "/login.html");

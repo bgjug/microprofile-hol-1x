@@ -7,6 +7,7 @@ import java.io.Serializable;
 public class UserContext implements Serializable {
 
     private User loggedUser;
+    private String userJWT;
 
     public User getLoggedUser() {
         return loggedUser;
@@ -14,5 +15,13 @@ public class UserContext implements Serializable {
 
     public void setLoggedUser(User loggedUser) {
         this.loggedUser = loggedUser;
+    }
+
+    public String getUserJWT() {
+        return userJWT;
+    }
+
+    public void setUserJWT(String userJWT) {
+        this.userJWT = userJWT;
     }
 }
