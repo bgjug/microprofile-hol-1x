@@ -1,7 +1,11 @@
 package bg.jug.microprofile.hol.users;
 
+import org.eclipse.microprofile.metrics.Gauge;
+import org.eclipse.microprofile.metrics.annotation.Metric;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -53,4 +57,19 @@ public class UserRepository {
     public Collection<User> getAll() {
         return users.values();
     }
+
+    /* Metrics */
+
+    //FIXME: uncomment in pom.xml
+    @Produces
+    @Metric(name="authorsPercentage")
+    @ApplicationScoped
+    private Gauge<Double> authorsPercentage = new Gauge<Double>() {
+
+        @Override
+        public Double getValue() {
+            long authors = users.values().stream().filter(u -> u.getRoles().contains("author")).count();
+            return Double.valueOf(authors / users.size());
+        }
+    };
 }
