@@ -1,5 +1,7 @@
 package bg.jug.microprofile.hol.content;
 
+import org.eclipse.microprofile.faulttolerance.Bulkhead;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -18,6 +20,9 @@ public class ArticleResource {
     @Inject
     private ArticleRepository articleRepository;
 
+    @Inject
+    private AuthorClient authorClient;
+
     @GET
     @Path("/all")
     public Response getAllArticles() {
@@ -31,6 +36,7 @@ public class ArticleResource {
 
     @GET
     @Path("/findById/{id}")
+    @Bulkhead(5)
     public Response findArticleById(@PathParam("id") Long id) {
         return articleRepository.findById(id)
                 .map(this::getFullArticleJson)
@@ -40,8 +46,7 @@ public class ArticleResource {
 
     private JsonObject getFullArticleJson(Article article) {
         String authorEmail = article.getAuthor();
-        // TODO request that from authors microservice
-        JsonObject authorJson = Json.createObjectBuilder().build();
+        JsonObject authorJson = authorClient.findAuthorByEmail(authorEmail);
         return article.toJson(authorJson);
     }
 

@@ -1,12 +1,16 @@
 package bg.jug.microprofile.hol.content;
 
+import org.eclipse.microprofile.faulttolerance.Asynchronous;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 @ApplicationScoped
 public class ArticleRepository {
@@ -42,7 +46,14 @@ public class ArticleRepository {
         return Optional.ofNullable(articles.get(id));
     }
 
-    public void createOrUpdate(Article article) {
+    @Asynchronous
+    public Future<Void> createOrUpdate(Article article) {
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         articles.put(article.getId(), article);
+        return CompletableFuture.completedFuture(null);
     }
 }

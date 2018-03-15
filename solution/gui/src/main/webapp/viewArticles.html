@@ -72,7 +72,8 @@
                         $("#view").load("viewArticle.html", null, function() {
                             $("#title").text(article.title);
                             $("#content").html(article.content);
-                            // TODO add the author
+                            $("#author").text(article.author.firstName + " " + article.author.lastName);
+                            $("#bio").text(article.author.bio);
                         });
                     }
                 }
