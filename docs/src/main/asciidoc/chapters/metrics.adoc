@@ -1,0 +1,219 @@
+== Eclipse MicroProfile Metrics 1.1
+
+Reliable service of a platform needs monitoring. There is already JMX as standard to expose metrics, but remote-JMX is not easy to deal with and especially does not fit well in a polyglot environment where other services are not running on the JVM. To enable monitoring in an easy fashion it is necessary that all MicroProfile implementations follow a certain standard with respect to (base) API path, data types involved, always available metrics and return codes used.
+
+=== Difference to health checks
+Health checks are primarily targeted at a quick yes/no response to the question "Is my application still running ok?". Modern systems that schedule the starting of applications (e.g. Kubernetes) use this information to restart the application if the answer is 'no'.
+
+Metrics on the other hand can help to determine the health. Beyond this they serve to pinpoint issues, provide long term trend data for capacity planning and pro-active discovery of issues (e.g. disk usage growing without bounds). Metrics can also help those scheduling systems decide when to scale the application to run on more or fewer machines.
+
+=== Metrics Setup
+Metrics that are exposed need to be configured in the server. On top of the pure metrics, metadata needs to be provided.
+
+The following three sets of sub-resource (scopes) are exposed.
+
+* base: metrics that all MicroProfile vendors have to provide
+* vendor: vendor specific metrics (optional)
+* application: application-specific metrics (optional)
+
+Let us try to see those metrics since they are already available at the server start:
+
+`http://localhost:9130/metrics`
+
+We will see something like:
+
+[source]
+----
+# TYPE vendor:system_cpu_load gauge
+# HELP vendor:system_cpu_load Display the "recent cpu usage" for the whole system. This value is a double in the [0.0,1.0] interval. A value of 0.0 means that all CPUs were idle during the recent period of time observed, while a value of 1.0 means that all CPUs were actively running 100% of the time during the recent period being observed. All values betweens 0.0 and 1.0 are possible depending of the activities going on in the system. If the system recent cpu usage is not available, the method returns a negative value.
+vendor:system_cpu_load 0.20673758865248226
+# TYPE base:classloader_total_loaded_class_count counter
+# HELP base:classloader_total_loaded_class_count Displays the total number of classes that have been loaded since the JVM has started execution.
+base:classloader_total_loaded_class_count 12227
+# TYPE base:cpu_system_load_average gauge
+# HELP base:cpu_system_load_average Displays the system load average for the last minute. The system load average is the sum of the number of runnable entities queued to the available processors and the number of runnable entities running on the available processors averaged over a period of time. The way in which the load average is calculated is operating system specific but is typically a damped time-dependent average. If the load average is not available, a negative value is displayed. This attribute is designed to provide a hint about the system load and may be queried frequently. The load average may be unavailable on some platform where it is expensive to implement this method.
+base:cpu_system_load_average 2.380859375
+# TYPE base:thread_count counter
+# HELP base:thread_count Displays the current number of live threads including both daemon and non-daemon threads.
+base:thread_count 96
+# TYPE base:classloader_current_loaded_class_count counter
+# HELP base:classloader_current_loaded_class_count Displays the number of classes that are currently loaded in the JVM.
+base:classloader_current_loaded_class_count 12227
+# TYPE base:jvm_uptime_seconds gauge
+# HELP base:jvm_uptime_seconds Displays the uptime of the JVM in milliseconds.
+base:jvm_uptime_seconds 0.0
+# TYPE base:memory_committed_non_heap_bytes gauge
+# HELP base:memory_committed_non_heap_bytes Displays the amount of memory in bytes that is committed for the JVM to use.
+base:memory_committed_non_heap_bytes 8.5467136E7
+# TYPE base:gc_ps_mark_sweep_count counter
+# HELP base:gc_ps_mark_sweep_count Displays the total number of collections that have occurred. This attribute lists -1 if the collection count is undefined for this collector.
+base:gc_ps_mark_sweep_count 2
+# TYPE base:memory_committed_heap_bytes gauge
+# HELP base:memory_committed_heap_bytes Displays the amount of memory in bytes that is committed for the JVM to use.
+base:memory_committed_heap_bytes 6.3438848E8
+# TYPE base:thread_max_count counter
+# HELP base:thread_max_count Displays the peak live thread count since the Java virtual machine started or peak was reset. This includes daemon and non-daemon threads.
+base:thread_max_count 97
+# TYPE base:gc_ps_scavenge_count counter
+# HELP base:gc_ps_scavenge_count Displays the total number of collections that have occurred. This attribute lists -1 if the collection count is undefined for this collector.
+base:gc_ps_scavenge_count 11
+# TYPE base:cpu_available_processors gauge
+# HELP base:cpu_available_processors Displays the number of processors available to the JVM. This value may change during a particular invocation of the virtual machine.
+base:cpu_available_processors 8
+# TYPE base:thread_daemon_count counter
+# HELP base:thread_daemon_count Displays the current number of live daemon threads.
+base:thread_daemon_count 49
+# TYPE base:classloader_total_unloaded_class_count counter
+# HELP base:classloader_total_unloaded_class_count Displays the total number of classes unloaded since the JVM has started execution.
+base:classloader_total_unloaded_class_count 0
+# TYPE base:memory_used_non_heap_bytes gauge
+# HELP base:memory_used_non_heap_bytes Displays the amount of used memory in bytes.
+base:memory_used_non_heap_bytes 8.2016656E7
+# TYPE base:memory_max_heap_bytes gauge
+# HELP base:memory_max_heap_bytes Displays the maximum amount of memory in bytes that can be used for HeapMemory.
+base:memory_max_heap_bytes 3.817865216E9
+# TYPE base:memory_used_heap_bytes gauge
+# HELP base:memory_used_heap_bytes Displays the amount of used memory in bytes.
+base:memory_used_heap_bytes 2.57581272E8
+# TYPE base:gc_ps_mark_sweep_time counter
+# HELP base:gc_ps_mark_sweep_time Displays the approximate accumulated collection elapsed time in milliseconds. This attribute displays -1 if the collection elapsed time is undefined for this collector. The JVM implementation may use a high resolution timer to measure the elapsed time. This attribute may display the same value even if the collection count has been incremented if the collection elapsed time is very short.
+base:gc_ps_mark_sweep_time 144
+# TYPE base:memory_max_non_heap_bytes gauge
+# HELP base:memory_max_non_heap_bytes Displays the maximum amount of memory in bytes that can be used for NonHeapMemory.
+base:memory_max_non_heap_bytes -1.0
+# TYPE base:gc_ps_scavenge_time counter
+# HELP base:gc_ps_scavenge_time Displays the approximate accumulated collection elapsed time in milliseconds. This attribute displays -1 if the collection elapsed time is undefined for this collector. The JVM implementation may use a high resolution timer to measure the elapsed time. This attribute may display the same value even if the collection count has been incremented if the collection elapsed time is very short.
+base:gc_ps_scavenge_time 129
+----
+
+You may try with
+`http://localhost:9130/metrics/base`
+and
+`http://localhost:9130/metrics`
+as well..
+
+The results may be in JSON and Prometeus format.
+
+=== Gathering our own metrics
+The easiest way is to annotate field, method or class with an annotation.
+
+
+|===
+|Annotation	|Applies to	|Description	|Default Unit
+
+|@Counted
+|M, C, T
+|Denotes a counter, which counts the invocations of the annotated object.
+|MetricUnits.NONE
+
+|@Gauge
+|M
+|Denotes a gauge, which samples the value of the annotated object.
+|none Must be supplied by the user
+
+|@Metered
+|M, C, T
+|Denotes a meter, which tracks the frequency of invocations of the annotated object.
+|MetricUnits.PER_SECOND
+
+|@Metric
+|M, F, P
+|An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be used on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
+|MetricUnits.NONE
+
+|@Timed
+|M, C, T
+|Denotes a timer, which tracks duration of the annotated object.
+|MetricUnits.NANOSECONDS
+
+|===
+
+
+==== Metered
+The easiest example will be to add one @Metered annotation to a method to monitor how often it has been called.
+Lets switch to `SubscribersResource`
+
+[source, java]
+----
+@POST
+@Path("/add")
+@Metered(name = "Subscriber added")
+public Response addSubscriber(String subscriberString) {
+----
+
+as a result if we go `http://localhost:9130/metrics` we will see:
+
+[source]
+----
+
+----
+
+==== Gauge
+Let us also observe the state of or DB. A good idea is to use a gauge in `SobscribersRepository`:
+
+[source, java]
+----
+@Gauge(name = "Subscribers DB usage", unit = MetricUnits.NONE, absolute = true)
+public int getDBUsage(){
+   return subscribers.size();
+}
+----
+
+To make it work in Payara, we should implement a small workaround:
+
+[source, java]
+----
+//The official workaround
+private void init(@Observes @Initialized(ApplicationScoped.class) Object startEvent) {
+    // to trigger instance creation and hence activate the gauge
+}
+----
+
+Now if we go to metrics we will see:
+
+[source]
+----
+...
+# TYPE application:subscribers_db_usage gauge
+application:subscribers_db_usage 3
+...
+----
+
+Currently we don't need any specifics metric unit so we use NONE.
+
+==== Counter
+
+The API provides us the infrastructure for various counters Lets implement it on the subscribers.
+
+First we will inject it in `SubscribersRepository`
+
+[source, java]
+----
+@Inject
+@Metric
+private Counter subscribersDBCounter;
+----
+
+Now we are able to use it in the code:
+
+[source, java]
+----
+public void addSubscriber(Subscriber subscriber) {
+    subscribers.put(subscriber.getEmail(), subscriber);
+    //used for metrics
+    subscribersDBCounter.inc();
+}
+----
+
+As a result we can observe it in `http://localhost:9130/metrics`
+
+[source]
+----
+# TYPE application:bg_jug_microprofile_hol_subscribers_subscribers_repository_subscribers_db_counter counter
+application:bg_jug_microprofile_hol_subscribers_subscribers_repository_subscribers_db_counter 3
+----
+
+Looks great!
+
+More information can be found here: http://microprofile.io/project/eclipse/microprofile-metrics
+
