@@ -41,7 +41,8 @@ public class AuthorsResource {
 
     @GET
     @Path("/findByEmail/{email}")
-    public Response findAuthorById(@PathParam("email") String email) {
+    public Response findAuthorById(@PathParam("email") String email) throws InterruptedException {
+//        Thread.sleep(1000);
         return authorsRepository.findAuthorByEmail(email)
                 .map(author -> Response.ok(author.toJson()).build())
                 .orElse(Response.status(Response.Status.NOT_FOUND).build());
