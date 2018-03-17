@@ -1,7 +1,6 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
-import org.eclipse.microprofile.jwt.Claim;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -12,7 +11,6 @@ import javax.json.JsonObject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Set;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,17 +50,17 @@ public class ArticleResource {
         return article.toJson(authorJson);
     }
 
-    @Inject
-    @Claim("groups")
-    private Set<String> roles;
+//    @Inject
+//    @Claim("groups")
+//    private Set<String> roles;
 
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addArticle(JsonObject newArticle) {
-        if (!roles.contains("author")) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
-        }
+//        if (!roles.contains("author")) {
+//            return Response.status(Response.Status.UNAUTHORIZED).build();
+//        }
 
         Article user = Article.fromJson(newArticle);
         articleRepository.createOrUpdate(user);

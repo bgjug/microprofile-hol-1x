@@ -3,12 +3,11 @@ package bg.jug.microprofile.hol.subscribers;
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Gauge;
+import org.eclipse.microprofile.metrics.annotation.Metered;
 import org.eclipse.microprofile.metrics.annotation.Metric;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Initialized;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.time.LocalDate;
 import java.util.*;
@@ -56,11 +55,6 @@ public class SubscribersRepository {
     @Inject
     @Metric
     private Counter subscribersDBCounter;
-
-    //The official workaround
-    private void init(@Observes @Initialized(ApplicationScoped.class) Object startEvent) {
-        // to trigger instance creation and hence activate the gauge
-    }
 
     @Gauge(name = "Subscribers DB usage", unit = MetricUnits.NONE, absolute = true)
     public int getDBUsage(){
