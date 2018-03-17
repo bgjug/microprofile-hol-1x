@@ -49,16 +49,16 @@ public class SubscribersResource {
                 .orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    @Inject
-    @Claim("groups")
-    private Set<String> roles;
+//    @Inject
+//    @Claim("groups")
+//    private Set<String> roles;
 
     @POST
     @Path("/add")
     public Response addSubscriber(String subscriberString) {
-        if (!roles.contains("admin")) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
-        }
+//        if (!roles.contains("admin")) {
+//            return Response.status(Response.Status.UNAUTHORIZED).build();
+//        }
 
         Subscriber subscriber = Subscriber.fromJson(subscriberString);
 
