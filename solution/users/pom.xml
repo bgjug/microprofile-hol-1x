@@ -15,23 +15,24 @@
     </properties>
     <name>Users Microservice (WildFly Swarm)</name>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wildfly.swarm</groupId>
+                <artifactId>bom</artifactId>
+                <version>${version.wildfly-swarm}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
-            <groupId>org.eclipse.microprofile</groupId>
+            <groupId>org.wildfly.swarm</groupId>
             <artifactId>microprofile</artifactId>
-            <version>1.2</version>
-            <type>pom</type>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.wildfly.swarm</groupId>-->
-            <!--<artifactId>microprofile-metrics</artifactId>-->
-            <!--<version>${version.wildfly-swarm}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>org.wildfly.swarm</groupId>-->
-            <!--<artifactId>microprofile-health</artifactId>-->
-            <!--<version>${version.wildfly-swarm}</version>-->
-        <!--</dependency>-->
+
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
