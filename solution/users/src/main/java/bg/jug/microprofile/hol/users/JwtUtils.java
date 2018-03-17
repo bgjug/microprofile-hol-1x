@@ -46,8 +46,8 @@ class JwtUtils {
         try {
             JWTClaimsSet claimsSet = JWTClaimsSet.parse(claims);
             SignedJWT jwt = new SignedJWT(header, claimsSet);
-            System.out.println(header.toJSONObject().toJSONString());
-            System.out.println(claims.toJSONString());
+//            System.out.println(header.toJSONObject().toJSONString());
+//            System.out.println(claims.toJSONString());
             jwt.sign(new RSASSASigner(PRIVATE_KEY));
             return jwt.serialize();
         } catch (Exception e) {
