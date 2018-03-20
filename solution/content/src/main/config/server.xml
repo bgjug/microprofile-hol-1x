@@ -4,13 +4,11 @@
     <!-- Enable features -->
     <featureManager>
         <feature>microProfile-1.2</feature>
-        <feature>mpMetrics-1.0</feature>
     </featureManager>
 
     <quickStartSecurity userName="theUser" userPassword="thePassword"/>
     <keyStore id="defaultKeyStore" password="Liberty"/>
 
-    <!-- To access this server from a remote client add a host attribute to the following element, e.g. host="*" -->
     <httpEndpoint id="defaultHttpEndpoint"
                   httpPort="${default.http.port}"
                   httpsPort="9999" />
@@ -18,5 +16,5 @@
     <!-- Automatically expand WAR files and EAR files -->
     <applicationManager autoExpand="true"/>
 
-    <mpJwt id="jwtUserConsumer" keyName="default" audiences="simpleapp" issuer="http://localhost:9100"/>
+    <!--<mpJwt id="jwtUserConsumer" keyName="default" audiences="simpleapp" issuer="http://localhost:9100"/>-->
 </server>
