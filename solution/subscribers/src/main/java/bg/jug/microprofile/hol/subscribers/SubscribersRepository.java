@@ -1,6 +1,7 @@
 package bg.jug.microprofile.hol.subscribers;
 
 import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Gauge;
 import org.eclipse.microprofile.metrics.annotation.Metered;
@@ -48,9 +49,16 @@ public class SubscribersRepository {
         addSubscriber(frodoBaggins);
         addSubscriber(aragornSonOfAragorn);
         addSubscriber(legolas);
+
+        //Metrics
+        registry.getGauges();
+        System.out.println("Log all gauges:" +registry.getGauges());
+        System.out.println("Log all counters:" +registry.getCounters());
     }
 
     /* Metrics */
+    @Inject
+    private MetricRegistry registry;
 
     @Inject
     @Metric
@@ -60,5 +68,8 @@ public class SubscribersRepository {
     public int getDBUsage(){
         return subscribers.size();
     }
+
+
+
 
 }
