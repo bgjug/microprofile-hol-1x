@@ -213,7 +213,36 @@ As a result we can observe it in `http://localhost:9130/metrics`
 application:bg_jug_microprofile_hol_subscribers_subscribers_repository_subscribers_db_counter 3
 ----
 
+
+==== MetricRegistry
+
+The MetricRegistry is used to maintain a collection of metrics along with their metadata. There is one shared singleton of the MetricRegistry per scope (application, base, and vendor). When metrics are registered using annotations, the metrics are registered in the application MetricRegistry (and thus the application scope).
+
+We can gain programmatic access to all our counters from the registry like this: first `inject` it to our class
+[source,java]
+----
+@Inject
+private MetricRegistry registry;
+----
+
+then see what we have:
+
+[source,java]
+----
+@PostConstruct
+private void init(){
+    ...
+    registry.getGauges();
+    System.out.println("Log all gauges:" +registry.getGauges());
+    System.out.println("Log all counters:" +registry.getCounters());
+    ...
+}
+----
+
+we can not only see our meters, but also register new ones.
+
 Looks great!
 
-More information can be found here: http://microprofile.io/project/eclipse/microprofile-metrics
+==== Further information
 
+More information can be found here: http://microprofile.io/project/eclipse/microprofile-metrics
