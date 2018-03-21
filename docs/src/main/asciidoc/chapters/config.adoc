@@ -9,9 +9,11 @@ Under some circumstances, some data sources may change dynamically. The changed 
 === Design
 The current configuration of an application can be accessed via `ConfigProvider#getConfig()`.
 
-A Config consists of the information collected from the registered org.eclipse.microprofile.config.spi.ConfigSource s. These ConfigSource s get sorted according to their ordinal. That way it is possible to overwrite configuration with lower importance from outside.
+A Config consists of the information collected from the registered `org.eclipse.microprofile.config.spi.ConfigSource` s.
+These `ConfigSource` s get sorted according to their ordinal.
+That way it is possible to overwrite configuration with lower importance from outside.
 
-By default there are 3 default ConfigSources:
+By default there are 3 default config sources:
 
 * System.getProperties() (ordinal=400)
 * System.getenv() (ordinal=300)
@@ -21,16 +23,18 @@ Therefore, the default values can be specified in the above files packaged with 
 
 === In our case
 
-Since we are building a microservice based application, each of the services is available on its own URL. Since each service can run on a separate machine its not a good idea to hardcode the urls in the code. These string are perfect candidates to be externalized in a config.
+Since we are building a microservice based application, each of the services is available on its own URL.
+As each service can run on a separate machine it's not a good idea to hardcode the URLs in the code (as we've done in the beginning).
+These string are perfect candidates to be externalized in a config.
 
-All of our microservices use `Users` microservice, so let us go to `Authors` project and create `microprofile-config.properties` file in `src/main/resources/META-INF/` folder and put:
+All of our microservices use `Users` microservice, so let us go to _authors_ project and create `microprofile-config.properties` file in `src/main/resources/META-INF/` folder and put:
 
 [source]
 ----
 usersServiceUrl=http://localhost:9100/users
 ----
 
-In `AuthorsRepository` we will replace the static string with
+In `AuthorsResource` we will replace the static string with
 
 [source, java]
 ----
@@ -39,10 +43,10 @@ In `AuthorsRepository` we will replace the static string with
 private String usersUrl;
 ----
 
-@ConfigProperty annotation tells the server to scan the config file, search for the property and inject it in the `usersUrls` variable.
+`@ConfigProperty` annotation tells the server to scan the config sources, search for the property and inject it in the `usersUrls` variable.
 This annotation provides an optional fallback option `defaultValue` which we will use for out local development.
 
-The same configuration should be applied to `Content`, `Subscribers`.
+The same configuration should be applied to _content_ and _subscribers_ projects.
 
 The `Gui` project uses all of the other services, so we should put all th URLs in the config `src/main/webapp/META-INF/microprofile-config.properties`:
 

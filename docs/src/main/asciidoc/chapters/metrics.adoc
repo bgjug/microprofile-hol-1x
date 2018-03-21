@@ -1,6 +1,8 @@
 == Metrics
 
-Reliable service of a platform needs monitoring. There is already JMX as standard to expose metrics, but remote-JMX is not easy to deal with and especially does not fit well in a polyglot environment where other services are not running on the JVM. To enable monitoring in an easy fashion it is necessary that all MicroProfile implementations follow a certain standard with respect to (base) API path, data types involved, always available metrics and return codes used.
+Reliable service of a platform needs monitoring.
+There is already JMX as standard to expose metrics, but remote-JMX is not easy to deal with and especially does not fit well in a polyglot environment where other services are not running on the JVM.
+To enable monitoring in an easy fashion it is necessary that all MicroProfile implementations follow a certain standard with respect to (base) API path, data types involved, always available metrics and return codes used.
 
 === Difference to health checks
 Health checks are primarily targeted at a quick yes/no response to the question "Is my application still running ok?". Modern systems that schedule the starting of applications (e.g. Kubernetes) use this information to restart the application if the answer is 'no'.
@@ -16,11 +18,12 @@ The following three sets of sub-resource (scopes) are exposed.
 * vendor: vendor specific metrics (optional)
 * application: application-specific metrics (optional)
 
-Let us try to see those metrics since they are already available at the server start:
+Let us try to see those metrics since they are already available at the server start.
+Make sure that the _subscribers_ service is running and access:
 
 `http://localhost:9130/metrics`
 
-We will see something like:
+You will see something like:
 
 [source]
 ----
@@ -86,17 +89,12 @@ base:memory_max_non_heap_bytes -1.0
 base:gc_ps_scavenge_time 129
 ----
 
-You may try with
-`http://localhost:9130/metrics/base`
-and
-`http://localhost:9130/metrics`
-as well..
+You may try with `http://localhost:9130/metrics/base` and `http://localhost:9130/metrics/vendor` as well..
 
 The results may be in JSON and Prometeus format.
 
 === Gathering our own metrics
 The easiest way is to annotate field, method or class with an annotation.
-
 
 |===
 |Annotation	|Applies to	|Description	|Default Unit
@@ -141,7 +139,7 @@ Lets switch to `SubscribersResource`
 public Response addSubscriber(String subscriberString) {
 ----
 
-as a result if we go `http://localhost:9130/metrics` we will see:
+As a result if we go `http://localhost:9130/metrics` we will see:
 
 [source]
 ----
@@ -149,23 +147,15 @@ as a result if we go `http://localhost:9130/metrics` we will see:
 ----
 
 ==== Gauge
-Let us also observe the state of or DB. A good idea is to use a gauge in `SobscribersRepository`:
+
+Let us also observe the state of our DB.
+A good idea is to use a gauge in `SobscribersRepository`:
 
 [source, java]
 ----
 @Gauge(name = "Subscribers DB usage", unit = MetricUnits.NONE, absolute = true)
 public int getDBUsage(){
    return subscribers.size();
-}
-----
-
-To make it work in Payara, we should implement a small workaround:
-
-[source, java]
-----
-//The official workaround
-private void init(@Observes @Initialized(ApplicationScoped.class) Object startEvent) {
-    // to trigger instance creation and hence activate the gauge
 }
 ----
 
@@ -179,11 +169,12 @@ application:subscribers_db_usage 3
 ...
 ----
 
-Currently we don't need any specifics metric unit so we use NONE.
+Currently we don't need any specific metric unit so we use NONE.
 
 ==== Counter
 
-The API provides us the infrastructure for various counters Lets implement it on the subscribers.
+The API provides us the infrastructure for various counters.
+Let's implement it on the subscribers.
 
 First we will inject it in `SubscribersRepository`
 
@@ -213,12 +204,12 @@ As a result we can observe it in `http://localhost:9130/metrics`
 application:bg_jug_microprofile_hol_subscribers_subscribers_repository_subscribers_db_counter 3
 ----
 
-
 ==== MetricRegistry
 
 The MetricRegistry is used to maintain a collection of metrics along with their metadata. There is one shared singleton of the MetricRegistry per scope (application, base, and vendor). When metrics are registered using annotations, the metrics are registered in the application MetricRegistry (and thus the application scope).
 
-We can gain programmatic access to all our counters from the registry like this: first `inject` it to our class
+We can gain programmatic access to all our counters from the registry like this: first `@Inject` it to our class
+
 [source,java]
 ----
 @Inject
@@ -244,22 +235,27 @@ we can not only see our meters, but also register new ones.
 Looks great!
 
 ==== Custom Gauge
-Now let us switch to Content service. We would like to know what is the currently most published author.
-First of all let's inject the registry in `ContentRepository`
+Now let us switch to _content_ service.
+We would like to know what is the currently most published author.
+First of all, let's inject the registry in `ContentRepository`
+
 [source,java]
 ----
 @Inject
 private MetricRegistry metricRegistry;
 ----
 
-Then in the @PostConstruct method add our custom gauge, its metadata and register it:
+Then in the `@PostConstruct` method add our custom gauge, its metadata and register it:
+
 [source,java]
 ----
 //metrics, searching for the most published author
 Gauge<String> theMostPublishedAuthor = () -> {
-    Map<String, Long> articlesPerAuthor = articles.values().stream().map(Article::getAuthor)
-            .collect(groupingBy(Function.identity(), Collectors.counting()));
-    return Collections.max(articlesPerAuthor.entrySet(), Comparator.comparingLong(Map.Entry::getValue)).getKey();
+    Map<String, Long> articlesPerAuthor = articles.values().stream()
+                .map(Article::getAuthor)
+                .collect(groupingBy(Function.identity(), Collectors.counting()));
+    return Collections.max(articlesPerAuthor.entrySet(),
+                Comparator.comparingLong(Map.Entry::getValue)).getKey();
 };
 
 Metadata mostPublishedMetadata = new Metadata(
@@ -272,21 +268,25 @@ Metadata mostPublishedMetadata = new Metadata(
 metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
 ----
 
-Now if we start the service and go to
+Now if we start the service (startContent.sh or startContent.bat) and run from the command line
+
 [source, bash]
 ----
 curl -k -u theUser:thePassword -H "Accept: application/json" https://localhost:9999/metrics/application
 ----
 
-We will see
-[source]
+We will see:
+
+[source,json]
 ----
-{"theMostPublishedAuthor":"frodo@example.org"}
+{
+  "theMostPublishedAuthor":"frodo@example.org"
+}
 ----
 
 as a result! Great!
 
 
-==== Further information
+=== Further information
 
 More information can be found here: http://microprofile.io/project/eclipse/microprofile-metrics
