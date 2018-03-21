@@ -1,0 +1,60 @@
+= MicroProfile tutorial image:https://travis-ci.org/bgjug/microprofile-hol-1x.svg?branch=master["Build Status", link="https://travis-ci.org/bgjug/microprofile-hol-1x"]
+
+== What is this tutorial about
+This tutorial will allow you to explore the full potential of *MicroProfile* through a step by step development of a small Microservice based JavaEE web application.
+
+== What is a MicroProfile?
+https://microprofile.io/[MicroProfile] is an initiative which attempts to bring together experts from the vendors, organizations like JUGs and individuals, make them agree in the open on how should a certain microservice pattern be implemented and put that in an open specification with an open TCK.
+
+It started June 2016 four vendors (RedHat, IBM, Tomitribe and Payara) and an organization (London Java Community) announced version 1 of MicroProfile.
+It defined a minimal MicroProfile runtime consisting of three Java EE standards:
+
+* JAX-RS
+* CDI
+* JSON-P
+
+with the intent of community having an active role in the MicroProfile definition and roadmap.
+
+The MicroProfile releases were scheduled twice a year.
+They followed the release train approach: whichever spec was ready by the final date, was considered to be in.
+The picture so far is the following:
+
+* MicroProfile 1.1
+** Config 1.0
+* MicroProfile 1.2
+** Config 1.1
+** Health Check 1.0
+** Metrics 1.0
+** Fault Tolerance 1.0
+** JWT Propagation 1.0
+* MicroProfile 1.3
+** Open Tracing 1.0
+** OpenAPI 1.0
+** REST Client 1.0
+
+This hands-on-lab will focus on the specs introduced up to MicroProfile 1.2.
+
+== What will we do?
+
+In order to showcase the various MicroProfile specification, we will enhance a simple sample microservice application.
+It is used by owners of a magazine to manage the various parts of their business.
+The app consists of five microservices, each of which can be scaled and upgraded separately.
+Not only that, but the microservices run on different MicroProfile runtimes.
+
+Here is a brief description of the functionalities:
+
+* The _users_ microservice (implemented on WildFly Swarm) knows about all the users along with their roles in the system.
+A user can be subscriber, author or manager, or may not have role.
+If you want to log in or register users, you go to that microservice
+* The _content_ microservice (implemented on IBM Open Liberty) keeps track of all the articles published in the magazine
+* The _authors_ microservice (implemented on Hammock) provides additional information about users in the _author_ role
+* The _subscribers_ microservice (implemented on Payara Micro) has the same task, but for users in the _subscriber_ role
+* Finally, the _gui_ microservice (implemented on Apache TomEE) provides a web site that integrates the above microservices
+
+Initially, the five microservices are implemented with MicroProfile 1.0.
+Which means that they use CDI, JAX-RS and JSON-P to fulfill their requirements.
+In the following step by step guide we will show you how you can use the various MicroProfile specs with this application.
+
+== This tutorial
+
+TODO: what do download and how to start
