@@ -1,4 +1,4 @@
-== Eclipse MicroProfile Health Check 1.0
+== Health Check
 
 Monitoring a microservice application is not like monitoring a monolith.
 There are system with tens or even hundreds of microservices, each of which can stop working.

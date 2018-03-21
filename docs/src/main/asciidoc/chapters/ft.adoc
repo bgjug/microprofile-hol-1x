@@ -250,7 +250,7 @@ So, how do we make the above method call asynchronous:
 [source,java]
 ----
     @Asynchronous <1>
-    public Future<Void> <2> createOrUpdate(Article article) {
+    public Future<Void> createOrUpdate(Article article) { <2>
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

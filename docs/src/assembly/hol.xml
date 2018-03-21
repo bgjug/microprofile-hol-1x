@@ -1,0 +1,22 @@
+<assembly>
+    <id>bin</id>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <fileSets>
+        <fileSet>
+            <directory>sources</directory>
+            <outputDirectory>/sources</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/generated-docs</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>microprofile-hol.pdf</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>
