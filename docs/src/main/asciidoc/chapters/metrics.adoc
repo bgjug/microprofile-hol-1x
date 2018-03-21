@@ -243,6 +243,50 @@ we can not only see our meters, but also register new ones.
 
 Looks great!
 
+==== Custom Gauge
+Now let us switch to Content service. We would like to know what is the currently most published author.
+First of all let's inject the registry in `ContentRepository`
+[source,java]
+----
+@Inject
+private MetricRegistry metricRegistry;
+----
+
+Then in the @PostConstruct method add our custom gauge, its metadata and register it:
+[source,java]
+----
+//metrics, searching for the most published author
+Gauge<String> theMostPublishedAuthor = () -> {
+    Map<String, Long> articlesPerAuthor = articles.values().stream().map(Article::getAuthor)
+            .collect(groupingBy(Function.identity(), Collectors.counting()));
+    return Collections.max(articlesPerAuthor.entrySet(), Comparator.comparingLong(Map.Entry::getValue)).getKey();
+};
+
+Metadata mostPublishedMetadata = new Metadata(
+        "theMostPublishedAuthor",
+        "The Most Published Author",
+        "The Most Published Author so far",
+        MetricType.GAUGE,
+        MetricUnits.NONE);
+
+metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
+----
+
+Now if we start the service and go to
+[source, bash]
+----
+curl -k -u theUser:thePassword -H "Accept: application/json" https://localhost:9999/metrics/application
+----
+
+We will see
+[source]
+----
+{"theMostPublishedAuthor":"frodo@example.org"}
+----
+
+as a result! Great!
+
+
 ==== Further information
 
 More information can be found here: http://microprofile.io/project/eclipse/microprofile-metrics
