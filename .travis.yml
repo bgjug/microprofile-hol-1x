@@ -1,0 +1,15 @@
+language: java
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.email "travis@travis-ci.org"
+  - git config --local user.name "Travis CI"
+#  - git tag "$(date +'%Y.%m.%d-%H_%M')-$(git log --format=%h -1)"
+deploy:
+  provider: releases
+  api_key: $GITHUB_API_KEY
+  file_glob: true
+  file: docs/target/*.zip
+  skip_cleanup: true
+  on:
+    tags: true
+    all_branches: true
