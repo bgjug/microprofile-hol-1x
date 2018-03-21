@@ -5,18 +5,21 @@ There are system with tens or even hundreds of microservices, each of which can 
 Or can still be up, but not functioning properly and might need some attention (or a simple restart).
 It should be possible for a centralized monitoring tool or an orchestrator (like Kubernates) to be able to tell at every moment whether a service is healthy or not.
 
-The purpose of the MicroProfile Health Check spec is to define a way to check exactly that.
+The purpose of the MicroProfile Health Check spec is to define a way to determine exactly that.
 Each compliant implementation should expose the `/health` resource.
 Based on its outcome, it should be possible to identify whether a microservice is doing well or not.
 
-Obviously, if it is not available, then the service is down and should be started.
+Obviously, if that resource is not available, then the service is down and should be started.
 However, there might be some cases, when the service is up, but is not functioning correctly.
 In these cases health endpoint should suggest that by returning a 503 HTTP response code and by providing the details in the response body.
 
+In this chapter we will show you how you can use MicroProfile Health Check to provide that information in a straightforward manner.
+
 === The _health_ resource
 
-Let's try it out with the users microservice for example: http://localhost:9100/health.
-This should return the following response content:
+Let's try to do a health check of the _users_ microservice.
+Make sure that it is running (call the `startUsers.sh` or `startUsers.bat` script) and then access http://localhost:9100/health.
+It should return the following response content:
 
 [source,json]
 ----
@@ -34,7 +37,7 @@ Otherwise it would be `"DOWN"`.
 But what are these checks?
 Initially there are no such, that is why the `checks` attribute's value is an empty array.
 But the Health Checks specification provides a standard API which allows to implement and plug user defined checks.
-If any of it returns a bad status, the overall outcome is `"DOWN"`.
+If any of it returns a bad status, the overall outcome becomes `"DOWN"`.
 If *all* the checks are fine, then you'll get the `"UP"` result.
 
 === Implementing a check
@@ -43,10 +46,10 @@ You can easily define your own health checks by implementing the `org.eclipse.mi
 It defines a single method `call`, which returns an instance of `HealthCheckResponse`.
 In a CDI managed environment like those in our sample application, you can automatically register that by annotating it with `org.eclipse.microprofile.health.Health`.
 
-Let's add together a few health checks to the subscribers microservice.
-Suppose that it should be considered live if it can access the users microservice.
+Let's add together a few health checks to the _subscribers_ microservice.
+Suppose that it should be considered live if it can access the _users_ microservice.
 Otherwise, if for some reason it can't, it should report that it is not healthy and hope that a restart by the orchestrating program will fix the issue.
-We'll start by adding a this class:
+We'll start by adding this class to in the `bg.jug.microprofile.hol.subscribers` package:
 
 [source,java]
 ----
@@ -61,7 +64,7 @@ public class UserAvailabilityHealthCheck implements HealthCheck {
 }
 ----
 
-We'll try to access the users microservice and build a response based on its availability.
+We'll try to access the users microservice and build the response based on its availability.
 The `HealthCheckResponse` class defines a builder-like API.
 You bootstrap it by calling the `named()` method and thus providing a name to distinguish your check in the JSON object.
 
@@ -94,7 +97,7 @@ In our case it depends on the result of the HTTP call to the users microservice:
                     .request()
                     .get();
             return response.up().build();
-        } catch (Exception ce) {
+        } catch (Exception ex) {
             return response.down().build();
         }
 
@@ -103,7 +106,7 @@ In our case it depends on the result of the HTTP call to the users microservice:
 
 So, that's it.
 Let's try it out.
-Make sure that the users microservice is running and access http://localhost:9130/health.
+Make sure that both the _subscribers_ and _users_ microservices are running (for subscribers you can kill it and start it again with the respective script after each change you do to the app) and access http://localhost:9130/health.
 You should receive something along these lines:
 
 [source,json]
@@ -151,10 +154,7 @@ public class SubscribersListFullCheck implements HealthCheck {
 ----
 
 In order to implement the `call` method we will need to inject `SubscribersRepository`.
-We will use it to extract the number of subscribers and then will compare the latter to the maximum number comping from the configuration.
-Besides the `up` and `down` methods, the `HealthCheckResponseBuilder` class provides a `state` method that takes a boolean.
-It is much more convenient in cases where we want to evaluate the health check condition.
-There this method saves us some if's and else's:
+We will use it to extract the number of subscribers and then will compare the latter to the maximum number coming from the configuration:
 
 [source,java]
 ----
@@ -165,10 +165,14 @@ There this method saves us some if's and else's:
     public HealthCheckResponse call() {
         int numberOfSubscribers = subscribersRepository.getSubscribers().size();
         return HealthCheckResponse.named("subscribersListFull")
-                .state(numberOfSubscribers <= maximumSubscribers)
+                .state(numberOfSubscribers <= maximumSubscribers) (1)
                 .build();
     }
 ----
+
+(1) Besides the `up` and `down` methods, the `HealthCheckResponseBuilder` class provides a `state` method that takes a boolean.
+It is much more convenient in cases where we want to evaluate the health check condition.
+There this method saves us some if's and else's
 
 Finally we want to add some context information about the check in the `data` attribute.
 We do it with the `withData()` method, which takes a key and a value.

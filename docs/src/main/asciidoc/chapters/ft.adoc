@@ -10,12 +10,13 @@ And the most reliable thing about a network call is that it is not reliable.
 That is why, in order to not fail in a distributed environment, we must be ready to embrace failure.
 And be tolerant to faults by handling them gracefully.
 Or in other words - be resilient.
-Throughout the last few years a lot of patterns were defined that became best practices when it comes to fault tolerance in a microservice architecture.
+Throughout the last few years a lot of patterns were defined.
+They later became best practices in the area of fault tolerance in a microservice architecture.
 There were also libraries (https://github.com/Netflix/Hystrix[Hystrix] and https://github.com/jhalterman/failsafe[Failsafe] to name a few) that provided Java developers the toolset to implement those patterns in their apps.
 
 MicroProfile 1.2 implementations make no difference in their goal to provide those capabilities.
-In the following lines we will look at which those fault tolerance patterns are and how you can make you MicroProfile app use them.
-We will use the _content_ service, in conjunction with _authors_.
+In the following lines we will look at which those fault tolerance patterns are and how you can make your MicroProfile app use them.
+We will use the _content_ service, in conjunction with _authors_ for demo.
 When the former is requested to return a certain article, it in turns requests the author details (like first and last name and short bio) from the latter.
 This call may fail for many different reasons and you'll see how MicroProfile Fault Tolerance features allow you to handle failure gracefully.
 
@@ -61,7 +62,7 @@ In order to simulate failure, let's add an artificial sleep in `AuthorsResource:
     }
 ----
 
-Run the content and authors microservices and call http://localhost:9120/content/findById/3.
+Run the _content_ and _authors_ microservices and call http://localhost:9120/content/findById/3.
 
 Well, nothing really exciting happened: we eventually got a `TimeoutException` in the console.
 We can all agree that reporting the failure is not the most resilient outcome.
@@ -160,9 +161,9 @@ Let's also add a dump in the console to note that the method was called (so that
 You also noticed that we still keep our fallback handler.
 It will be invoked in case that after the specified number of retries, the failure keeps occurring.
 
-Now, in order to see it in action, let's start the _user_, _gui_ and _content_ microservices (without _author_).
+Now, in order to see the fallback and retry in action, let's start the _user_, _gui_ and _content_ microservices (and stop _author_).
 Go to http://localhost:9000 and log in with any registered user (e.g. frodo@example.org/frodo123).
-Then pick an article click on its tile.
+Then pick an article and click on its title.
 
 You'll notice two things:
 
@@ -173,7 +174,7 @@ The `@Retry` annotation provides quite a few options for configuring the retry p
 
 * Delay between retries (default is 0)
 * Exceptions which will trigger retry
-* Exception which will trigger abort
+* Exceptions which will trigger abort
 * Jitter
 
 === Circuit breaker
@@ -182,15 +183,15 @@ You can regard the _circuit breaker_ as retry on steroids.
 The pattern was popularized by Michael Nygard in his book Release It! in 2012.
 
 The idea behind the pattern is that there must be a circuit breaker object that intercepts the call to a given resource.
-This object monitors for failures and once those failures reach a certain threshold, the "circuit opens".
+This object looks for failures and once those failures reach a certain threshold, the "circuit opens".
 Which means that the interceptor will return an error (or a fallback response) for some time.
 After that time passes, the circuit becomes half-open.
 While in this state, if the next request succeeds, the circuit closes and the communication continues in its intended mode.
 Otherwize, the circuit goes back to open and stays like that for another timeout period.
 
 It is fairly easy to configure a circuit breaker for method calls with MicroProfile Fault Tolerance.
-There is again a dedicated annotations: `org.eclipse.microprofile.faulttolerance.CircuitBreaker`.
-Here is the same method in the `AuthorClient` class
+There is again a dedicated annotation: `org.eclipse.microprofile.faulttolerance.CircuitBreaker`.
+Here is the same method in the `AuthorClient` class, this time protected by a circuit breaker:
 
 [source,java]
 ----
@@ -206,7 +207,7 @@ Here is the same method in the `AuthorClient` class
 ----
 
 <1> The circuit breaker will monitor a rolling window of 10 method calls
-<2> If 0.6 of those 10, that is 6, fail, the circuit will open
+<2> If a ratio of 0.6 of those 10, that is 6, fail, the circuit will open
 <3> The circuit will stay open for 2000 ms.
 If there are no failures in that period, it will go to half open state.
 <4> If during the half-open state there are two successful method calls, the circuit will be closed
@@ -215,13 +216,12 @@ If there are no failures in that period, it will go to half open state.
 === Asynchronous
 
 In the world of internet there is no time to wait.
-Besides resilient, another feature of the microservices apps is to be reactive.
-First step to becoming reactive is to avoid waiting for long running operations and only show their result when they are ready.
-Before that showing the current state is fine.
+Besides resilient, another feature of the microservices apps *reactive*.
+First step to becoming reactive is to avoid waiting for long running operations and only show their result when it is ready.
 
 Let's again look at our magazine manager.
 Suppose that adding a new article takes more than a couple of seconds.
-We will simulate that with an artificial wait in the beginning of the ArticleRepository::createOrUpdate method:
+We will simulate that with an artificial sleep in the beginning of the ArticleRepository::createOrUpdate method:
 
 [source,java]
 ----
@@ -235,14 +235,14 @@ We will simulate that with an artificial wait in the beginning of the ArticleRep
     }
 ----
 
-Try adding a new article in the UI.
+Restart the _content_ microserive after this change and try adding a new article in the UI.
 You will notice the delay.
 It is not the greatest experience, is it?
 
 But we can make the above method asynchronous.
 Thus it will return immediately.
 When we add a new article, the main page will load.
-Yes, it will be missing our article, but there are more than a few techniques in modern web design to handle that.
+Yes, it will miss our article at first load, but there are more than a few techniques in modern web design to handle that.
 Just waiting on the "Add article" page is certainly not one of them.
 
 So, how do we make the above method call asynchronous:
@@ -263,15 +263,15 @@ So, how do we make the above method call asynchronous:
 
 <1> Annotate the method with `org.eclipse.microprofile.faulttolerance.Asynchronous`.
 Remember EJB 3? :)
-<2> The method should return `Future` now
-<3> Yes, the method should return `Future` even when it is void and we don't care about the result.
+<2> The method should return `Future` now instead of `void`
+<3> Yes, the method should return `Future` even though we don't care about the result.
 And this is one way to build a `Future<Void>`
 
-Restart the content microservice (make sure that _gui_ and _users_ are running).
+Restart the _content_ microservice (make sure that _gui_ and _users_ are running).
 Add an article.
-You will return immediately to the articles pages, but your new article won't be there.
+You will see immediately the articles list pages, but your new article won't be there.
 Wait for a couple of seconds and click refresh.
-Your article should be there.
+Your article should appear.
 
 === Bulkhead
 
@@ -284,7 +284,7 @@ You may certainly guess that there is an annotation to set up Bulkhead: `org.ecl
 As well as in Hystrix, there are two approaches to bulkhead in MicroProfile Fault Tolerance: thread pool isolation and semaphore isolation.
 
 When applied to asynchronous method calls, the thread pool isolation is used.
-It allows to configure maximum concurrent threads size along the size of the waiting queue.
+It allows to configure maximum concurrent threads size as well as the size of the waiting queue.
 Here is an example with our `ArticleRepository::createOrUpdate` method:
 
 [source,java]

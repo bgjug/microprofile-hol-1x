@@ -47,7 +47,7 @@ Which means that there is no vendor lock in if you decide to choose the MicroPro
 
 The MicroProfile releases were scheduled twice a year.
 They followed the release train approach: whichever spec was ready by the final date, was considered to be in.
-That is how the picture so far is the following:
+The picture so far is the following:
 
 * MicroProfile 1.1
 ** Config 1.0
@@ -67,30 +67,31 @@ This hands-on-lab will focus on the specs introduced up to MicroProfile 1.2.
 === The showcase app
 
 In order to showcase the various MicroProfile specification, we will enhance a simple sample microservice application.
-It is used by an owner of a magazine to manage the various parts of their business.
+It is used by owners of a magazine to manage the various parts of their business.
 The app consists of five microservices, each of which can be scaled and upgraded separately.
 Not only that, but the microservices run on different MicroProfile runtimes.
+
 Here is a brief description of the functionalities:
 
 * The _users_ microservice (implemented on WildFly Swarm) knows about all the users along with their roles in the system.
 A user can be subscriber, author or manager, or may not have role.
 If you want to log in or register users, you go to that microservice
 * The _content_ microservice (implemented on IBM Open Liberty) keeps track of all the articles published in the magazine
-* The _authors_ microservice (implemented on Apache Hammock) provides additional information about users in the _author_ role
+* The _authors_ microservice (implemented on Hammock) provides additional information about users in the _author_ role
 * The _subscribers_ microservice (implemented on Payara Micro) has the same task, but for users in the _subscriber_ role
 * Finally, the _gui_ microservice (implemented on Apache TomEE) provides a web site that integrates the above microservices
 
 Initially, the five microservices are implemented with MicroProfile 1.0.
-Which means that they use CDI, JAX-RS and JSON-P to implement their requirements.
+Which means that they use CDI, JAX-RS and JSON-P to fulfill their requirements.
 In the following step by step guide we will show you how you can use the various MicroProfile specs with this application.
 
 The starting state of the project is located under the `sources` directory.
 You can directly import it in your IDE as a multi-module Maven project.
 It contains the initial implementation of the five microservices along with a few scripts that help running the app.
-You can try it out by first calling mvn from the root directory and then running the `startAll.sh` or `startAll.bat` script and connect your browser to http://localhost:9000.
+You can try it out by first calling `mvn` from the root directory and then running the `startAll.sh` or `startAll.bat` script and connect your browser to http://localhost:9000.
 
-The app landing page will will prompt you to login or register.
-Luckily, there are some users (as well as articles) created for your, so that you don't have to bother about setting up the initial state.
+The app landing page will prompt you to login or register.
+Luckily, there are some users (as well as articles) created for you, so that you don't have to bother about setting up the state at the beginning.
 The table below summarizes the initial users along with their passwords and roles (the email plays the role of a user name):
 
 |=========================================================
@@ -114,9 +115,9 @@ Just keep in mind that there is no persistent database behind the services.
 So whenever you restart any of them, its state will be reset.
 
 Before going on, take your time to look into the code.
-Notice the pattern in most of the microservices: they consist of an "entity" class, a repository taking care of CRUD-ing the entity and a JAX-RS resource responsing of communicating with the outer world.
+Notice the pattern in most of the microservices: they consist of an "entity" class, a repository taking care of CRUD-ing that entity and a JAX-RS resource responsible for the communication with the outer world.
 The _gui_ project is a little bit different.
 It keeps track of the current user session, but for the rest of its features, it contacts the other four microservices using a JAX-RS client.
 
-If you are not certain about anything that we do in the following chapter, you can alwasy consult the https://github.com/bgjug/microprofile-hol-1x/tree/master/solution[final state] on our github repository.
+Finally, if while working on the following chapters you are not certain about anything, you can always consult the https://github.com/bgjug/microprofile-hol-1x/tree/master/solution[final state] on our github repository.
 So, it's time to get started.

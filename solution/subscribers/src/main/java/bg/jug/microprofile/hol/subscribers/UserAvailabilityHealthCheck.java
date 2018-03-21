@@ -30,7 +30,7 @@ public class UserAvailabilityHealthCheck implements HealthCheck {
                     .request()
                     .get();
             return response.up().build();
-        } catch (Exception ce) {
+        } catch (Exception ex) {
             return response.down().build();
         }
 
