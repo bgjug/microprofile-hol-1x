@@ -1,0 +1,122 @@
+== Introduction
+
+Microservices and microservice architecture walked the path from a silver-bullet-promising buzzword to a largely adopted concept with growing popularity even among big enterprises.
+There are multiple success stories about companies that broke their monolith into pieces or started directly with microservices.
+Quite a lot of these pieces are developed in Java, so the web application platform vendors quickly jumped on the train.
+They all provided their own opinionated approach for the devs to write, deploy and monitor their apps.
+
+The vendors from the Java EE space got on the microservices highway as well.
+They were also trying to innovate and come with their own implementation of the different microservice patterns, running on top of the application servers they provide.
+But this was definitely not the EE style, which is all about openness and standardization.
+However, when it comes to such a hot topic with that traction, the "standards" path is not always the best one.
+On one hand, something has to be mature enough to become a standard, which will be followed and supported years ahead.
+On the other, the market and the industry doesn't give us that time, and as much as the Java EE vendors care about the standards, they are commercial companies with demanding customers and constant urge to find new ones.
+
+Then why not taking a bunch of "de-facto" standards, like the microservices patterns, and quickly turn them into EE specifications?
+And probably ship them in a few months with a special release of the umbrella spec?
+Because we've already been there and we've made that mistake with EJB CMP: (once) cool looking technology being standardized prematurely.
+The de-facto standards can be easily changed by another de-facto replacement.
+Or removed altogether.
+While this is not the case with Java EE specifications, where the pruning process is much more rigorous.
+
+So what is https://microprofile.io/[MicroProfile]?
+It is an initiative which attempts to take the best of both worlds: bring together experts from all the interested parties, make them agree in the open on how should a certain microservice pattern be implemented and put that in an open specification with an open TCK.
+Where do these experts come from?
+From the Java EE vendors, from other companies, from organizations (like Java User Groups).
+There are even some individuals that joined the team to bring their knowledge and energy.
+
+=== A little bit of history
+
+Everything started June 2016.
+Then four vendors (RedHat, IBM, Tomitribe and Payara) and an organization (London Java Community) announced version 1 of MicroProfile.
+Its first target was not to immediately implement microservice patterns: it did not include any.
+It rather aimed at simplicity and at speed.
+Both speed to market as well as speed to start.
+It defined a minimal MicroProfile runtime consisting of three Java EE standards: CDI, JAX-RS and JSON-P.
+Having that implemented and working together, makes any server compliant with MicroProfile version 1.
+
+That was easy, but the real work was only just to come.
+The community agreed on a https://github.com/eclipse/microprofile-evolution-process[process] for proposing new MicroProfile specifications.
+Each spec is supposed to provide a test compatibility kit (TCK), which must be open.
+Which means that any runtime that runs the TCK can claim compliance with the respective spec, without paying any royalties to any company.
+
+At the end, there's no single vendor behind MicroProfile.
+It is developed under the umbrella and following the formal processes of Eclipse Foundation.
+Thus you can be sure that no single company will steer the future and take all the important decisions.
+Which means that there is no vendor lock in if you decide to choose the MicroProfile approach for your microservice solution.
+
+The MicroProfile releases were scheduled twice a year.
+They followed the release train approach: whichever spec was ready by the final date, was considered to be in.
+That is how the picture so far is the following:
+
+* MicroProfile 1.1
+** Config 1.0
+* MicroProfile 1.2
+** Config 1.1
+** Health Check 1.0
+** Metrics 1.0
+** Fault Tolerance 1.0
+** JWT Propagation 1.0
+* MicroProfile 1.3
+** Open Tracing 1.0
+** OpenAPI 1.0
+** REST Client 1.0
+
+This hands-on-lab will focus on the specs introduced up to MicroProfile 1.2.
+
+=== The showcase app
+
+In order to showcase the various MicroProfile specification, we will enhance a simple sample microservice application.
+It is used by an owner of a magazine to manage the various parts of their business.
+The app consists of five microservices, each of which can be scaled and upgraded separately.
+Not only that, but the microservices run on different MicroProfile runtimes.
+Here is a brief description of the functionalities:
+
+* The _users_ microservice (implemented on WildFly Swarm) knows about all the users along with their roles in the system.
+A user can be subscriber, author or manager, or may not have role.
+If you want to log in or register users, you go to that microservice
+* The _content_ microservice (implemented on IBM Open Liberty) keeps track of all the articles published in the magazine
+* The _authors_ microservice (implemented on Apache Hammock) provides additional information about users in the _author_ role
+* The _subscribers_ microservice (implemented on Payara Micro) has the same task, but for users in the _subscriber_ role
+* Finally, the _gui_ microservice (implemented on Apache TomEE) provides a web site that integrates the above microservices
+
+Initially, the five microservices are implemented with MicroProfile 1.0.
+Which means that they use CDI, JAX-RS and JSON-P to implement their requirements.
+In the following step by step guide we will show you how you can use the various MicroProfile specs with this application.
+
+The starting state of the project is located under the `sources` directory.
+You can directly import it in your IDE as a multi-module Maven project.
+It contains the initial implementation of the five microservices along with a few scripts that help running the app.
+You can try it out by running the `startAll.sh` or `startAll.bat` script and connect your browser to http://localhost:9000.
+
+The app landing page will will prompt you to login or register.
+Luckily, there are some users (as well as articles) created for your, so that you don't have to bother about setting up the initial state.
+The table below summarizes the initial users along with their passwords and roles (the email plays the role of a user name):
+
+|=========================================================
+| email | password | role(s)
+
+| bilbo@example.org | bilbo123 | admin
+
+| frodo@example.org | frodo123 | author, subscriber
+
+| gandalf@example.org | gandalf123 | author
+
+| aragorn@example.org | aragorn123 | subscriber
+
+| gimli@example.org | gimli123 | -
+|=========================================================
+
+For your convenience we've added also scripts for rebuilding and booting each single microservice.
+They are really handy if you only want to test a certain aspect of the app.
+Or if you make changes to just one microservice and want to avoid restarting the whole system over and over again.
+Just keep in mind that there is no persistent database behind the services.
+So whenever you restart any of them, its state will be reset.
+
+Before going on, take your time to look into the code.
+Notice the pattern in most of the microservices: they consist of an "entity" class, a repository taking care of CRUD-ing the entity and a JAX-RS resource responsing of communicating with the outer world.
+The _gui_ project is a little bit different.
+It keeps track of the current user session, but for the rest of its features, it contacts the other four microservices using a JAX-RS client.
+
+If you are not certain about anything that we do in the following chapter, you can alwasy consult the https://github.com/bgjug/microprofile-hol-1x/tree/master/solution[final state] on our github repository.
+So, it's time to get started.

@@ -1,0 +1,217 @@
+== Eclipse MicroProfile Health Check 1.0
+
+Monitoring a microservice application is not like monitoring a monolith.
+There are system with tens or even hundreds of microservices, each of which can stop working.
+Or can still be up, but not functioning properly and might need some attention (or a simple restart).
+It should be possible for a centralized monitoring tool or an orchestrator (like Kubernates) to be able to tell at every moment whether a service is healthy or not.
+
+The purpose of the MicroProfile Health Check spec is to define a way to check exactly that.
+Each compliant implementation should expose the `/health` resource.
+Based on its outcome, it should be possible to identify whether a microservice is doing well or not.
+
+Obviously, if it is not available, then the service is down and should be started.
+However, there might be some cases, when the service is up, but is not functioning correctly.
+In these cases health endpoint should suggest that by returning a 503 HTTP response code and by providing the details in the response body.
+
+=== The _health_ resource
+
+Let's try it out with the users microservice for example: http://localhost:9100/health.
+This should return the following response content:
+
+[source,json]
+----
+{
+    "outcome":"UP",
+    "checks":[]
+}
+----
+
+There are two important attributes in this response body: `outcome` and `checks`.
+The first one provides the overall result of the health check.
+If everything with the checks implemented by the microservices is fine, the outcome is `"UP"`.
+Otherwise it would be `"DOWN"`.
+
+But what are these checks?
+Initially there are no such, that is why the `checks` attribute's value is an empty array.
+But the Health Checks specification provides a standard API which allows to implement and plug user defined checks.
+If any of it returns a bad status, the overall outcome is `"DOWN"`.
+If *all* the checks are fine, then you'll get the `"UP"` result.
+
+=== Implementing a check
+
+You can easily define your own health checks by implementing the `org.eclipse.microprofile.health.HealthCheck` interface.
+It defines a single method `call`, which returns an instance of `HealthCheckResponse`.
+In a CDI managed environment like those in our sample application, you can automatically register that by annotating it with `org.eclipse.microprofile.health.Health`.
+
+Let's add together a few health checks to the subscribers microservice.
+Suppose that it should be considered live if it can access the users microservice.
+Otherwise, if for some reason it can't, it should report that it is not healthy and hope that a restart by the orchestrating program will fix the issue.
+We'll start by adding a this class:
+
+[source,java]
+----
+@Health
+@ApplicationScoped
+public class UserAvailabilityHealthCheck implements HealthCheck {
+
+    @Override
+    public HealthCheckResponse call() {
+
+    }
+}
+----
+
+We'll try to access the users microservice and build a response based on its availability.
+The `HealthCheckResponse` class defines a builder-like API.
+You bootstrap it by calling the `named()` method and thus providing a name to distinguish your check in the JSON object.
+
+[source,java]
+----
+    @Override
+    public HealthCheckResponse call() {
+        HealthCheckResponseBuilder response = HealthCheckResponse.named("usersAvailable");
+
+    }
+----
+
+Then, based on the outcome you want to communicate, you either call `up()` or `down()`.
+In our case it depends on the result of the HTTP call to the users microservice:
+
+[source,java]
+----
+    @Inject
+    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
+    private String usersUrl;
+
+    @Override
+    public HealthCheckResponse call() {
+        HealthCheckResponseBuilder response = HealthCheckResponse.named("usersAvailable");
+
+        Client client = ClientBuilder.newClient();
+        try {
+            client.target(usersUrl)
+                    .path("all")
+                    .request()
+                    .get();
+            return response.up().build();
+        } catch (Exception ce) {
+            return response.down().build();
+        }
+
+    }
+----
+
+So, that's it.
+Let's try it out.
+Make sure that the users microservice is running and access http://localhost:9130/health.
+You should receive something along these lines:
+
+[source,json]
+----
+{
+    "outcome":"UP",
+    "checks":[
+        {
+            "name":"usersAvailable",
+            "state":"UP",
+            "data":{}
+        }
+    ]
+}
+----
+
+Stop the users microservice and see how the outcome changes to `"DOWN"`.
+
+=== Providing additional data
+
+The `HealthCheckResponseBuilder` API gives you the opportunity to provide some more information about each check.
+It will appear in the `data` attribute of the respective check in the response JSON.
+Let's try this.
+Suppose we want to have a check whether the number of subscribers has reached a certain value.
+Beyond that value we will consider our microservice as overloaded and raise a flag to the team responsible for monitoring the magazine manager.
+
+There is nothing peculiar in creating this health check.
+We will make the maximum number of subscribers configurable, so that we can play around wit it.
+
+[source,java]
+----
+@Health
+@ApplicationScoped
+public class SubscribersListFullCheck implements HealthCheck {
+
+    @Inject
+    @ConfigProperty(name = "maxSubscribers", defaultValue = "10")
+    private int maximumSubscribers;
+
+    @Override
+    public HealthCheckResponse call() {
+
+    }
+}
+----
+
+In order to implement the `call` method we will need to inject `SubscribersRepository`.
+We will use it to extract the number of subscribers and then will compare the latter to the maximum number comping from the configuration.
+Besides the `up` and `down` methods, the `HealthCheckResponseBuilder` class provides a `state` method that takes a boolean.
+It is much more convenient in cases where we want to evaluate the health check condition.
+There this method saves us some if's and else's:
+
+[source,java]
+----
+    @Inject
+    private SubscribersRepository subscribersRepository;
+
+    @Override
+    public HealthCheckResponse call() {
+        int numberOfSubscribers = subscribersRepository.getSubscribers().size();
+        return HealthCheckResponse.named("subscribersListFull")
+                .state(numberOfSubscribers <= maximumSubscribers)
+                .build();
+    }
+----
+
+Finally we want to add some context information about the check in the `data` attribute.
+We do it with the `withData()` method, which takes a key and a value.
+For each `withData()` method call the response method will append an attribute to the `data` object:
+
+[source,java]
+----
+    @Override
+    public HealthCheckResponse call() {
+        int numberOfSubscribers = subscribersRepository.getSubscribers().size();
+        return HealthCheckResponse.named("subscribersListFull")
+                .withData("Number of subscribers", numberOfSubscribers)
+                .withData("Maximum subscriber", maximumSubscribers)
+                .state(numberOfSubscribers <= maximumSubscribers)
+                .build();
+    }
+----
+
+Now if we try to access again the health check endpoint, we'll get this:
+
+[source,json]
+----
+{
+    "outcome":"UP",
+    "checks":[
+        {
+            "name":"subscribersListFull",
+            "state":"UP",
+            "data":
+                {
+                    "Number of subscribers":"3",
+                    "Maximum subscriber":"10"
+                }
+        },
+        {
+            "name":"usersAvailable",
+            "state":"UP",
+            "data":{}
+        }
+    ]
+}
+----
+
+Try a little bit experimenting.
+Set the maximum subscribers (e.g. by setting an environment variable called `maxSubscribers`) to 1 and restart the subscribers microservice.
+See what happened to the new health check that we added and to the overall outcome.

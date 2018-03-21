@@ -1,0 +1,315 @@
+== Fault Tolerance
+
+Microservice applications are not like monoliths.
+No matter how complex a monolith is, no matter of how many modules it may consist, inter-module communications are just method calls.
+Which are fairly predictable whether they will succeed or not.
+On the other hand, one of the main characteristics of microservice applications is that it is distributed.
+In distributed apps calls between different modules (or microservices) go over the wire.
+And the most reliable thing about a network call is that it is not reliable.
+
+That is why, in order to not fail in a distributed environment, we must be ready to embrace failure.
+And be tolerant to faults by handling them gracefully.
+Or in other words - be resilient.
+Throughout the last few years a lot of patterns were defined that became best practices when it comes to fault tolerance in a microservice architecture.
+There were also libraries (https://github.com/Netflix/Hystrix[Hystrix] and https://github.com/jhalterman/failsafe[Failsafe] to name a few) that provided Java developers the toolset to implement those patterns in their apps.
+
+MicroProfile 1.2 implementations make no difference in their goal to provide those capabilities.
+In the following lines we will look at which those fault tolerance patterns are and how you can make you MicroProfile app use them.
+We will use the _content_ service, in conjunction with _authors_.
+When the former is requested to return a certain article, it in turns requests the author details (like first and last name and short bio) from the latter.
+This call may fail for many different reasons and you'll see how MicroProfile Fault Tolerance features allow you to handle failure gracefully.
+
+=== Timeout
+
+One of the nastiest things for a user of a website is waiting a page to load for too long.
+The time of modems is long gone and now even smart phones are able to load the website content really fast.
+But sometimes the microservice serving our page might be calling another service, which might be performing a bit slow.
+So we must be able to set a minimum time after which the call will be abandoned.
+
+Doing that is quite straightforward with MicroProfile Fault Tolerance.
+This and all the other resilience configurations can be enabled by just adding an annotation.
+In this case it is `org.eclipse.microprofile.faulttolerance.Retry`.
+It receives a value, which is the time (by default in milliseconds, but the time unit can be configured) to wait for the method call to return.
+
+You can place this annotation on method or on class level.
+In the latter case, it will apply to all the methods in the annotated class.
+
+Let's see how we can configure the _content_ microservice to wait at most 800 milliseconds for the _authors_ microservice to return.
+We have the `AuthorClient` bean that does the communication, so let's annotate its `findAuthorByEmail` method:
+
+[source,java]
+----
+    @Timeout(800)
+    public JsonObject findAuthorByEmail(String email) {
+        // Method implementation
+    }
+----
+
+Quick and easy.
+
+In order to simulate failure, let's add an artificial sleep in `AuthorsResource::findAuthorById`:
+
+[source,java]
+----
+    @GET
+    @Path("/findByEmail/{email}")
+    public Response findAuthorById(@PathParam("email") String email) throws InterruptedException {
+        Thread.sleep(1000);
+        return authorsRepository.findAuthorByEmail(email)
+                .map(author -> Response.ok(author.toJson()).build())
+                .orElse(Response.status(Response.Status.NOT_FOUND).build());
+    }
+----
+
+Run the content and authors microservices and call http://localhost:9120/content/findById/3.
+
+Well, nothing really exciting happened: we eventually got a `TimeoutException` in the console.
+We can all agree that reporting the failure is not the most resilient outcome.
+In order to fail gracefully you have to return anything.
+
+Enter `@Fallback`.
+
+=== Fallback
+
+Resilience doesn't mean reporting errors.
+It mostly means always responding, even in case of failure.
+That is why MicroProfile Fault Tolerance implementations provide the `org.eclipse.microprofile.faulttolerance.Fallback` annotation.
+It helps you declare a fallback class or method, which will be called in case of failure.
+
+Let's declare one in conjunction with our timeout:
+
+[source,java]
+----
+    @Fallback(fallbackMethod = "defaultAuthor") <1>
+    @Timeout(800)
+    public JsonObject findAuthorByEmail(String email) {
+        // method implementation
+    }
+
+    public JsonObject defaultAuthor(String email) { <2>
+        return Json.createObjectBuilder()
+                .add("firstName", "")
+                .add("lastName", "Unkown")
+                .add("bio", "Try again later")
+                .add("email", email)
+                .build();
+    }
+----
+
+<1> Declare the name of the fallback method, which will be called in case `findAuthorByEmail` times out
+<2> Implement the fallback method. It should be in the same class as the original method and should have the same parameters and return type
+
+Sometime you want to use the same fallback behavior for multiple methods located in different classes.
+In that case you can define that behavior in a separate class, implementing the `FallbackHandler` interface.
+And pass that implementation to the value attribute of the `@Fallback` annotation:
+
+[source,java]
+----
+    @Fallback(AuthorMissingFallbackHandler.class)
+    @Timeout(800)
+    public JsonObject findAuthorByEmail(String email) {
+        // Implementation goes here
+    }
+
+public class AuthorMissingFallbackHandler
+            implements FallbackHandler<JsonObject> {
+
+    @Override
+    public JsonObject handle(ExecutionContext executionContext) {
+        return Json.createObjectBuilder()
+                .add("firstName", "")
+                .add("lastName", "Unkown")
+                .add("bio", "Try again later")
+                .add("email", (String) executionContext.getParameters()[0])
+                .build();
+    }
+}
+----
+
+=== Retry
+
+One of the most common situations in a distributed system is when a microservice is down for a reason.
+In a lot of these cases, it gets restarted by the orchestration/monitoring tool immediately after it discovers the problem.
+That is why a common pattern when a request fails is to repeat that request, hoping that the service will be available the next time.
+
+This can be easily done with MicroProfile Fault Tolerance.
+You just use the annotation `org.eclipse.microprofile.faulttolerance.Retry`.
+In order to avoid constant retries when the failure is not that easily recoverable (i.e. a simple restart of the remote service is not a solution), you can configure things like maximum number of retries, or maximum time when retries are performed.
+
+Let's do that with our `AuthorClient`.
+We will set `@Retry` there and specify that the maximum number of retries is 5.
+If you ommit that, the default is 3.
+Let's also add a dump in the console to note that the method was called (so that we verify the retry functionality).
+
+[source,java]
+----
+    @Retry(maxRetries = 5)
+    @Fallback(AuthorMissingFallbackHandler.class)
+    public JsonObject findAuthorByEmail(String email) {
+        System.out.println("Looking up author");
+        Client client = ClientBuilder.newClient();
+        Response response = client.target(authorsUrl).path("findByEmail/" + email)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .get();
+        JsonObject author = response.readEntity(JsonObject.class);
+        response.close();
+        return author;
+    }
+----
+
+You also noticed that we still keep our fallback handler.
+It will be invoked in case that after the specified number of retries, the failure keeps occurring.
+
+Now, in order to see it in action, let's start the _user_, _gui_ and _content_ microservices (without _author_).
+Go to http://localhost:9000 and log in with any registered user (e.g. frodo@example.org/frodo123).
+Then pick an article click on its tile.
+
+You'll notice two things:
+
+. Our default author was displayed in the article page
+. The content microservice console printed six times the dump message we added
+
+The `@Retry` annotation provides quite a few options for configuring the retry policy
+
+* Delay between retries (default is 0)
+* Exceptions which will trigger retry
+* Exception which will trigger abort
+* Jitter
+
+=== Circuit breaker
+
+You can regard the _circuit breaker_ as retry on steroids.
+The pattern was popularized by Michael Nygard in his book Release It! in 2012.
+
+The idea behind the pattern is that there must be a circuit breaker object that intercepts the call to a given resource.
+This object monitors for failures and once those failures reach a certain threshold, the "circuit opens".
+Which means that the interceptor will return an error (or a fallback response) for some time.
+After that time passes, the circuit becomes half-open.
+While in this state, if the next request succeeds, the circuit closes and the communication continues in its intended mode.
+Otherwize, the circuit goes back to open and stays like that for another timeout period.
+
+It is fairly easy to configure a circuit breaker for method calls with MicroProfile Fault Tolerance.
+There is again a dedicated annotations: `org.eclipse.microprofile.faulttolerance.CircuitBreaker`.
+Here is the same method in the `AuthorClient` class
+
+[source,java]
+----
+    @CircuitBreaker(requestVolumeThreshold = 10, <1>
+                    failureRatio = 0.6, <2>
+                    delay = 2000L, <3>
+                    successThreshold = 2 <4>
+                )
+    @Fallback(fallbackMethod = "defaultAuthor") <5>
+    public JsonObject findAuthorByEmail(String email) {
+        // Method implementation
+    }
+----
+
+<1> The circuit breaker will monitor a rolling window of 10 method calls
+<2> If 0.6 of those 10, that is 6, fail, the circuit will open
+<3> The circuit will stay open for 2000 ms.
+If there are no failures in that period, it will go to half open state.
+<4> If during the half-open state there are two successful method calls, the circuit will be closed
+<5> While the circuit is open, a fallback response will be returned
+
+=== Asynchronous
+
+In the world of internet there is no time to wait.
+Besides resilient, another feature of the microservices apps is to be reactive.
+First step to becoming reactive is to avoid waiting for long running operations and only show their result when they are ready.
+Before that showing the current state is fine.
+
+Let's again look at our magazine manager.
+Suppose that adding a new article takes more than a couple of seconds.
+We will simulate that with an artificial wait in the beginning of the ArticleRepository::createOrUpdate method:
+
+[source,java]
+----
+    public void createOrUpdate(Article article) {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        articles.put(article.getId(), article);
+    }
+----
+
+Try adding a new article in the UI.
+You will notice the delay.
+It is not the greatest experience, is it?
+
+But we can make the above method asynchronous.
+Thus it will return immediately.
+When we add a new article, the main page will load.
+Yes, it will be missing our article, but there are more than a few techniques in modern web design to handle that.
+Just waiting on the "Add article" page is certainly not one of them.
+
+So, how do we make the above method call asynchronous:
+
+[source,java]
+----
+    @Asynchronous <1>
+    public Future<Void> <2> createOrUpdate(Article article) {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        articles.put(article.getId(), article);
+        return CompletableFuture.completedFuture(null); <3>
+    }
+----
+
+<1> Annotate the method with `org.eclipse.microprofile.faulttolerance.Asynchronous`.
+Remember EJB 3? :)
+<2> The method should return `Future` now
+<3> Yes, the method should return `Future` even when it is void and we don't care about the result.
+And this is one way to build a `Future<Void>`
+
+Restart the content microservice (make sure that _gui_ and _users_ are running).
+Add an article.
+You will return immediately to the articles pages, but your new article won't be there.
+Wait for a couple of seconds and click refresh.
+Your article should be there.
+
+=== Bulkhead
+
+Another useful pattern coming from the Release it! book.
+Its goal is to avoid faults in one part of a system to take the entire system down.
+MicroProfile Fault Tolerance (as well as Hystrix) achieves that goal by limiting the number of concurrent calls to a method.
+This way there is no way the execution of a certain method to hijack all the resources (e.g. threads for request handling) that might be needed by other methods.
+
+You may certainly guess that there is an annotation to set up Bulkhead: `org.eclipse.microprofile.faulttolerance.Bulkhead`.
+As well as in Hystrix, there are two approaches to bulkhead in MicroProfile Fault Tolerance: thread pool isolation and semaphore isolation.
+
+When applied to asynchronous method calls, the thread pool isolation is used.
+It allows to configure maximum concurrent threads size along the size of the waiting queue.
+Here is an example with our `ArticleRepository::createOrUpdate` method:
+
+[source,java]
+----
+    @Asynchronous
+    @Bulkhead(value = 5, <1>
+              waitingTaskQueue = 8 <2>
+          )
+    public Future<Void> createOrUpdate(Article article) {
+        // Method implementation
+    }
+----
+
+<1> The maximum number of concurrent threads
+<2> The waiting queue size
+
+The approach to synchronous calls is semaphore style.
+It only allows to configure the number of concurrent calls:
+
+[source,java]
+----
+    @GET
+    @Path("/findById/{id}")
+    @Bulkhead(5)
+    public Response findArticleById(@PathParam("id") Long id) {
+        // Find the articles
+    }
+----

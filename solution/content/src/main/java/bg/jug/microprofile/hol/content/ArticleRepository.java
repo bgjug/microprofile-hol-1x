@@ -1,19 +1,19 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.faulttolerance.Asynchronous;
-import org.eclipse.microprofile.metrics.*;
+import org.eclipse.microprofile.faulttolerance.Bulkhead;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.groupingBy;
 
 @ApplicationScoped
 public class ArticleRepository {
@@ -56,6 +56,8 @@ public class ArticleRepository {
     }
 
     @Asynchronous
+    @Bulkhead(value = 5,
+              waitingTaskQueue = 8)
     public Future<Void> createOrUpdate(Article article) {
 //        try {
 //            Thread.sleep(2000);

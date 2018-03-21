@@ -1,6 +1,7 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
@@ -24,6 +25,7 @@ public class AuthorClient {
     @Retry
     @Fallback(fallbackMethod = "defaultAuthor")
     @Timeout(800)
+//    @CircuitBreaker(requestVolumeThreshold = 10, failureRatio = 0.6, delay = 2000L, successThreshold = 2)
     public JsonObject findAuthorByEmail(String email) {
         System.out.println("Looking up author");
         Client client = ClientBuilder.newClient();
