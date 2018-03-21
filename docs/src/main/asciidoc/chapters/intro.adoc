@@ -87,7 +87,7 @@ In the following step by step guide we will show you how you can use the various
 The starting state of the project is located under the `sources` directory.
 You can directly import it in your IDE as a multi-module Maven project.
 It contains the initial implementation of the five microservices along with a few scripts that help running the app.
-You can try it out by running the `startAll.sh` or `startAll.bat` script and connect your browser to http://localhost:9000.
+You can try it out by first calling mvn from the root directory and then running the `startAll.sh` or `startAll.bat` script and connect your browser to http://localhost:9000.
 
 The app landing page will will prompt you to login or register.
 Luckily, there are some users (as well as articles) created for your, so that you don't have to bother about setting up the initial state.

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Magazine Manager</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="css/sb-admin-2.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+    <div class="navbar-header">
+        <a href="viewArticles.html"><img src="img/magman.png"/></a>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">New Article</h1>
+        </div>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="#" role="form">
+            <fieldset>
+                <div id="titleFormGroup" class="form-group">
+                    <label for="title">Title</label>
+                    <label id="titleMessage" class="control-label" for="title"></label>
+                    <input id="title" class="form-control" type="text" name="title">
+                </div>
+                <div id = "contentFormGroup" class="form-group">
+                    <label for="content">Content</label>
+                    <label id="contentMessage" class="control-label" for="title"></label>
+                    <textarea id="content" name="content" class="form-control" rows="20"></textarea>
+                </div>
+                <input id="submit" class="btn btn-success" type="button" value="Submit">
+            </fieldset>
+        </form>
+    </div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script>
+    $(function() {
+        $("#submit").click(function() {
+            var title = $("#title").val();
+            var content = $("#content").val();
+            var payload = {
+                title: title,
+                content: content
+            };
+            $.ajax("gui/article",
+                {
+                    type: "POST",
+                    accepts: {
+                        json: "application/json"
+                    },
+                    contentType: "application/json",
+                    data: JSON.stringify(payload),
+                    statusCode: {
+                        200: function() {
+                            window.location.replace("viewArticles.html");
+                        }
+                    }
+                }
+            );
+        });
+    });
+</script>
+</body>
+</html>

@@ -16,5 +16,4 @@
     <!-- Automatically expand WAR files and EAR files -->
     <applicationManager autoExpand="true"/>
 
-    <!--<mpJwt id="jwtUserConsumer" keyName="default" audiences="simpleapp" issuer="http://localhost:9100"/>-->
 </server>
