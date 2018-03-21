@@ -44,21 +44,7 @@ public class ArticleRepository {
         articles.put(article5.getId(), article5);
 
 
-        //metrics
-        Gauge<String> theMostPublishedAuthor = () -> {
-            Map<String, Long> articlesPerAuthor = articles.values().stream().map(Article::getAuthor)
-                    .collect(groupingBy(Function.identity(), Collectors.counting()));
-            return Collections.max(articlesPerAuthor.entrySet(), Comparator.comparingLong(Map.Entry::getValue)).getKey();
-        };
 
-        Metadata mostPublishedMetadata = new Metadata(
-                "theMostPublishedAuthor",
-                "The Most Published Author",
-                "The Most Published Author so far",
-                MetricType.GAUGE,
-                MetricUnits.NONE);
-
-        metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
     }
 
     public List<Article> getAll() {
