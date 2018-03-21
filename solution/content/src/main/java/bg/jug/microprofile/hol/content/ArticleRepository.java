@@ -1,21 +1,27 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.faulttolerance.Asynchronous;
+import org.eclipse.microprofile.metrics.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.inject.Inject;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @ApplicationScoped
 public class ArticleRepository {
 
     private Map<Long, Article> articles = new ConcurrentHashMap<>();
+
+    @Inject
+    private MetricRegistry metricRegistry;
 
     @PostConstruct
     public void initArticles() {
@@ -36,6 +42,23 @@ public class ArticleRepository {
         articles.put(article3.getId(), article3);
         articles.put(article4.getId(), article4);
         articles.put(article5.getId(), article5);
+
+
+        //metrics
+        Gauge<String> theMostPublishedAuthor = () -> {
+            Map<String, Long> articlesPerAuthor = articles.values().stream().map(Article::getAuthor)
+                    .collect(groupingBy(Function.identity(), Collectors.counting()));
+            return Collections.max(articlesPerAuthor.entrySet(), Comparator.comparingLong(Map.Entry::getValue)).getKey();
+        };
+
+        Metadata mostPublishedMetadata = new Metadata(
+                "theMostPublishedAuthor",
+                "The Most Published Author",
+                "The Most Published Author so far",
+                MetricType.GAUGE,
+                MetricUnits.NONE);
+
+        metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
     }
 
     public List<Article> getAll() {
@@ -56,4 +79,6 @@ public class ArticleRepository {
         articles.put(article.getId(), article);
         return CompletableFuture.completedFuture(null);
     }
+
+
 }

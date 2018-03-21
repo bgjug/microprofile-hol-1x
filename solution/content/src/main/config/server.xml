@@ -18,3 +18,4 @@
 
     <!--<mpJwt id="jwtUserConsumer" keyName="default" audiences="simpleapp" issuer="http://localhost:9100"/>-->
 </server>
+mvn
