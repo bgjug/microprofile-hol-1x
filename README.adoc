@@ -41,7 +41,7 @@ It is used by owners of a magazine to manage the various parts of their business
 The app consists of five microservices, each of which can be scaled and upgraded separately.
 Not only that, but the microservices run on different MicroProfile runtimes.
 
-Here is a brief description of the functionalities:
+Here is a brief description of the features:
 
 * The _users_ microservice (implemented on WildFly Swarm) knows about all the users along with their roles in the system.
 A user can be subscriber, author or manager, or may not have role.
@@ -55,6 +55,21 @@ Initially, the five microservices are implemented with MicroProfile 1.0.
 Which means that they use CDI, JAX-RS and JSON-P to fulfill their requirements.
 In the following step by step guide we will show you how you can use the various MicroProfile specs with this application.
 
-== This tutorial
+== Let's start
 
-TODO: what do download and how to start
+Download the https://github.com/bgjug/microprofile-hol-1x/releases/download/1.2.0/microprofile-hol.zip[lab archive] and extract it.
+You will notice inside a PDF and a directory with a maven multi-module project.
+
+The PDF is the lab handout.
+Open it and follow the instructions.
+
+The `sources` folder is the showcase project.
+Each microservice is represented as a separate Maven module.
+We encourage you to import it in your IDE.
+
+There are also helper scripts to start the separate services as well as one that starts them all.
+Usually you will only need a subset of them to be running, so you may only use the individual service scripts.
+When you update the service code, just kill the process of its microservice and run it again.
+
+Let's get the microservice party started!
+
