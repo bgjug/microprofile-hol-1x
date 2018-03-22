@@ -39,7 +39,7 @@ In `AuthorsResource` we will replace the static string with
 [source, java]
 ----
 @Inject
-@ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
+@ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:8081/users")
 private String usersUrl;
 ----
 
@@ -63,20 +63,31 @@ and inject all of them in `GUIResource`
 [source, java]
 ----
 @Inject
-@ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
+@ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:8081/users")
 private String usersUrl;
 @Inject
-@ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:9110/authors")
+@ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:8082/authors")
 private String authorsUrl;
 @Inject
-@ConfigProperty(name = "contentServiceUrl", defaultValue = "http://localhost:9120/content")
+@ConfigProperty(name = "contentServiceUrl", defaultValue = "http://localhost:8083/content")
 private String contentUrl;
 @Inject
-@ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:9130/subscribers")
+@ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:8084/subscribers")
 private String subscribersUrl;
 ----
-
 As we can see, there are always fallback options available.
+
+==== Environmental Variables
+
+We are also able to set our configuration properties from ourside the app via _Environmental variables_. Let us experiment! Remove the line `usersServiceUrl=http://localhost:9100/users` from the `microprofile-config.properties` and start it. Since we have the default fallback the app will still start with the default url.
+But if we would like to make an external configuration, if for example you run the app in docker, you can do it with `-D<property=value> in the commandline:
+
+[source,bash]
+----
+java -jar authors.jar -DusersServiceUrl=http://localhost:9100/users
+----
+Now the app will inject the specified url.
+
 
 More information about the Configuration specification is available at:
 

@@ -26,16 +26,16 @@ public class GUIResource {
     private static final String AUTHORIZATION_HEADER = "Authorization";
 
     @Inject
-    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:9100/users")
+    @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:8081/users")
     private String usersUrl;
     @Inject
-    @ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:9110/authors")
+    @ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:8082/authors")
     private String authorsUrl;
     @Inject
-    @ConfigProperty(name = "contentServiceUrl", defaultValue = "http://localhost:9120/content")
+    @ConfigProperty(name = "contentServiceUrl", defaultValue = "http://localhost:8083/content")
     private String contentUrl;
     @Inject
-    @ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:9130/subscribers")
+    @ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:8084/subscribers")
     private String subscribersUrl;
 
     @Inject
