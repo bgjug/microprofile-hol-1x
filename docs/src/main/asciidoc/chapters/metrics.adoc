@@ -91,9 +91,9 @@ base:gc_ps_scavenge_time 129
 
 You may try with `http://localhost:9130/metrics/base` and `http://localhost:9130/metrics/vendor` as well..
 
-The results may be in JSON and Prometeus format.
+By default th output is in Prometeus format. But the output can be in JSON format as well. To have in JSON we have to add header "Accept: application/json" to our request. If you do not put any header it the server will recognize it as text and return the metrics in Prometeus format.
 
-=== Gathering our own metrics
+=== Gathering the metrics
 The easiest way is to annotate field, method or class with an annotation.
 
 |===
@@ -116,7 +116,7 @@ The easiest way is to annotate field, method or class with an annotation.
 
 |@Metric
 |M, F, P
-|An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be used on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
+|An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be usegid on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
 |MetricUnits.NONE
 
 |@Timed
@@ -126,6 +126,57 @@ The easiest way is to annotate field, method or class with an annotation.
 
 |===
 
+The programming API follows http://metrics.dropwizard.io/[Dropwizard] Metrics 3.2.3 API, but with local changes. It is expected that many existing DropWizard Metrics based applications can easily be ported over by exchanging the package names.
+
+
+==== Counters
+Counters are a metric that is used to keep an incremental or a decremental count. The initial value of the counter is set to 0 and can be incremented by using inc() or inc(long n) and decremented by using dec() or dec(long n).
+
+You can use a counter to count total number of requests that are received or total number of concurrently active HTTP sessions.
+
+==== Gauges
+Gauges represent metrics that are sampled to obtain their value.
+
+We will see detailed examples below.
+
+==== Meters
+Meters are used to track throughput.
+
+To use a meter, you must call the meter.mark() method to mark an event. For multiple events, you can also use mark(long n) to mark multiple occurrences of events at the same time. A meter provides the following information:
+
+* Mean throughput.
+* One/five/fifteen minute exponentially weighted moving average throughput.
+* A count of the number of measurements.
+
+==== Histograms
+Histograms are used to store the distribution of values.
+
+To record a value in the histogram, you must call histogram.update(long value) with the value that you want to record. The current state (or snapshot) of the histogram can be retrieved by using getSnapshot(). Histograms in MicroProfile Metrics only support integer or long values.
+
+A histogram provides the following information:
+
+* Max/Min/Mean values
+* The value at the 50th, 75th, 95th, 98th, 99th, 99.9th percentile
+* A count of the number of values
+
+
+==== Timers
+Timers are used to aggregate timing durations, in nanoseconds, and provide duration and throughput statistics.
+
+To time a portion of the code, you can call timer.time(), which returns a timer.context object. This context is used to stop the timer by calling context.close(). The information that is retrieved from the timer is a combination of a meter and a histogram of timed durations.
+
+A timer provides the following information:
+
+* Max/Min/Mean times.
+* The time value at the 50th, 75th, 95th, 98th, 99th, 99.9th percentile.
+* Mean throughput.
+* One/five/fifteen minute exponentially weighted moving average throughput.
+* A count of the number of timed events.
+
+
+=== In our case
+
+Let us implement some of the metrics for our particular cases.
 
 ==== Metered
 The easiest example will be to add one @Metered annotation to a method to monitor how often it has been called.
@@ -139,17 +190,26 @@ Lets switch to `SubscribersResource`
 public Response addSubscriber(String subscriberString) {
 ----
 
-As a result if we go `http://localhost:9130/metrics` we will see:
+Now let us run `curl -H "Accept: application/json" http://localhost:9130/metrics`. We will see the following JSON:
 
-[source]
+[source,json]
 ----
-
+...
+"application": {
+    "bg.jug.microprofile.hol.subscribers.SubscribersRepository.Subscriber added": {
+      "count": 0,
+      "fiveMinRate": 0.0,
+      "oneMinRate": 0.0,
+      "fifteenMinRate": 0.0,
+      "meanRate": 0.0
+    },
+...
 ----
 
 ==== Gauge
 
 Let us also observe the state of our DB.
-A good idea is to use a gauge in `SobscribersRepository`:
+A good idea is to use a gauge in `SubscribersRepository`:
 
 [source, java]
 ----
@@ -230,14 +290,19 @@ private void init(){
 }
 ----
 
-we can not only see our meters, but also register new ones.
+we can not only see our meters, but also register new ones with MetricRegistry. This is done in the example below.
 
 Looks great!
 
 ==== Custom Gauge
 Now let us switch to _content_ service.
-We would like to know what is the currently most published author.
-First of all, let's inject the registry in `ContentRepository`
+We would like to know what is the currently most published author. Let us do this via a custom `Gauge` and `MetricRegistry`.
+
+Gauges represent metrics that are sampled to obtain their value.
+
+A gauge is an interface that needs to be implemented by the developer. Since the implementation of a gauge is not defined, they must be manually registered with the MetricRegistry by using the MetricRegistry .register() method.
+
+<1> First of all, let's inject the registry in `ContentRepository`
 
 [source,java]
 ----
@@ -245,7 +310,7 @@ First of all, let's inject the registry in `ContentRepository`
 private MetricRegistry metricRegistry;
 ----
 
-Then in the `@PostConstruct` method add our custom gauge, its metadata and register it:
+<2> Then in the `@PostConstruct` method add our custom gauge, its metadata and register it. The Gauge is actually just an implementation of a functional interface, so we can implement it with just a lambda. Inside this lambda we are searching for an Author, identified by his email, who wrote the greatest count of articles. First we group by email to find count, then we select the email which has the greatest count:
 
 [source,java]
 ----
@@ -257,7 +322,12 @@ Gauge<String> theMostPublishedAuthor = () -> {
     return Collections.max(articlesPerAuthor.entrySet(),
                 Comparator.comparingLong(Map.Entry::getValue)).getKey();
 };
+----
 
+<3> We then have to add the details describing our gauge. This is done
+
+[source,java]
+----
 Metadata mostPublishedMetadata = new Metadata(
         "theMostPublishedAuthor",
         "The Most Published Author",
@@ -268,9 +338,9 @@ Metadata mostPublishedMetadata = new Metadata(
 metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
 ----
 
-Now if we start the service (startContent.sh or startContent.bat) and run from the command line
+<3> Now if we start the service (startContent.sh or startContent.bat) and run from the command line
 
-[source, bash]
+[source]
 ----
 curl -k -u theUser:thePassword -H "Accept: application/json" https://localhost:9999/metrics/application
 ----
