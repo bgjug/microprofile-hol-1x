@@ -4,7 +4,7 @@
  
     <groupId>bg.jug</groupId>
     <artifactId>microprofile-hol</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
     <packaging>pom</packaging>
  
     <name>MicroProfile Hands-on lab</name>
