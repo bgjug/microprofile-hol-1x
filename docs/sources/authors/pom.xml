@@ -7,7 +7,7 @@
     <artifactId>authors</artifactId>
     <version>1.2</version>
     <properties>
-        <version.hammock>2.0</version.hammock>
+        <version.hammock>2.1</version.hammock>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

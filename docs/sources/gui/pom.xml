@@ -10,7 +10,7 @@
     <name>GUI Microservice (TomEE)</name>
 
     <properties>
-        <version.tomee>7.0.4</version.tomee>
+        <version.tomee>7.1.0</version.tomee>
         <guiPort>9000</guiPort>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -24,11 +24,6 @@
             <version>1.2</version>
             <type>pom</type>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.geronimo.config</groupId>
-            <artifactId>geronimo-config-impl</artifactId>
-            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -55,7 +50,7 @@
                 </executions>
                 <configuration>
                     <tomeeHttpPort>${guiPort}</tomeeHttpPort>
-                    <tomeeClassifier>webprofile</tomeeClassifier>
+                    <tomeeClassifier>microprofile</tomeeClassifier>
                 </configuration>
             </plugin>
             <plugin>

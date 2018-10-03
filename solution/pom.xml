@@ -71,7 +71,7 @@
                                     <workingDirectory>users</workingDirectory>
                                     <arguments>
                                         <argument>-jar</argument>
-                                        <argument>target/users-swarm.jar</argument>
+                                        <argument>target/users-thorntail.jar</argument>
                                         <argument>-Dswarm.http.port=${usersPort}</argument>
                                     </arguments>
                                 </configuration>

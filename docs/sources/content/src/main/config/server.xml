@@ -3,7 +3,7 @@
 
     <!-- Enable features -->
     <featureManager>
-        <feature>microProfile-1.2</feature>
+        <feature>microProfile-1.3</feature>
     </featureManager>
 
     <quickStartSecurity userName="theUser" userPassword="thePassword"/>

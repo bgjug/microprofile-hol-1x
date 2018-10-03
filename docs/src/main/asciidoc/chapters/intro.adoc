@@ -62,7 +62,7 @@ The picture so far is the following:
 ** OpenAPI 1.0
 ** REST Client 1.0
 
-This hands-on-lab will focus on the specs introduced up to MicroProfile 1.2.
+This hands-on-lab will focus on the specs introduced up to MicroProfile 1.3.
 
 === The showcase app
 
@@ -73,7 +73,7 @@ Not only that, but the microservices run on different MicroProfile runtimes.
 
 Here is a brief description of the functionalities:
 
-* The _users_ microservice (implemented on WildFly Swarm) knows about all the users along with their roles in the system.
+* The _users_ microservice (implemented on Thorntail) knows about all the users along with their roles in the system.
 A user can be subscriber, author or manager, or may not have role.
 If you want to log in or register users, you go to that microservice
 * The _content_ microservice (implemented on IBM Open Liberty) keeps track of all the articles published in the magazine
