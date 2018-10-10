@@ -1,10 +1,12 @@
 package bg.jug.microprofile.hol.content;
 
+import bg.jug.microprofile.hol.content.client.Author;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -22,6 +24,11 @@ public class AuthorClient {
     @ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:9110/authors")
     private String authorsUrl;
 
+    @Inject
+    @RestClient
+    private AuthorClient injectedAuthorsClient;
+
+
     @Retry
     @Fallback(fallbackMethod = "defaultAuthor")
     @Timeout(800)
@@ -29,6 +36,11 @@ public class AuthorClient {
     public JsonObject findAuthorByEmail(String email) {
         System.out.println("Looking up author");
         Client client = ClientBuilder.newClient();
+
+        //FIXME: issue with marshalling
+//        JsonObject author = injectedAuthorsClient.findAuthorByEmail(email);
+        //FIXME: currentry using fallback:
+
         Response response = client.target(authorsUrl).path("findByEmail/" + email)
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .get();
