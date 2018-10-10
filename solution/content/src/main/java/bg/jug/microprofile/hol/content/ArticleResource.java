@@ -6,6 +6,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.opentracing.Traced;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -44,6 +45,7 @@ public class ArticleResource {
     @Operation(
             summary = "Returns an article by id.",
             description = "Returns an article by id.")
+    @Traced(value = true, operationName = "ArticleResource.all")
     public Response getAllArticles() {
         JsonArray articlesArray = articleRepository.getAll()
                 .stream()
@@ -70,6 +72,7 @@ public class ArticleResource {
     @Operation(
             summary = "Returns an article by id.",
             description = "Returns an article by id.")
+    @Traced(value = true, operationName = "ArticleResource.byid")
     public Response findArticleById(@PathParam("id") Long id) {
         return articleRepository.findById(id)
                 .map(this::getFullArticleJson)
@@ -100,6 +103,7 @@ public class ArticleResource {
     @Operation(
             summary = "Add an article.",
             description = "Add an article.")
+    @Traced(value = true, operationName = "ArticleResource.add")
     public Response addArticle(JsonObject newArticle) {
 //        if (!roles.contains("author")) {
 //            return Response.status(Response.Status.UNAUTHORIZED).build();

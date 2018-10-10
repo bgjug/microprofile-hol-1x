@@ -47,6 +47,7 @@
                         <version>${version.ws-liberty}</version>
                         <type>zip</type>
                     </assemblyArtifact>
+                    <include>usr</include>
                     <userDirectory>${project.build.directory}</userDirectory>
                     <serverName>contentServer</serverName>
                     <configFile>src/main/config/server.xml</configFile>
@@ -99,6 +100,26 @@
                             <assemblyInstallDirectory>${project.build.directory}</assemblyInstallDirectory>
                             <packageFile>${project.build.directory}/content.jar</packageFile>
                             <include>runnable</include>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <id>install-tracer</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://repo1.maven.org/maven2/net/wasdev/wlp/tracer/liberty-opentracing-zipkintracer/1.0/liberty-opentracing-zipkintracer-1.0-sample.zip</url>
+                            <unpack>true</unpack>
+                            <outputDirectory>${project.build.directory}/liberty/wlp/usr</outputDirectory>
+                            <!-- <md5></md5> -->
                         </configuration>
                     </execution>
                 </executions>
