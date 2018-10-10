@@ -1,6 +1,11 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -25,6 +30,20 @@ public class ArticleResource {
 
     @GET
     @Path("/all")
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "No articles found",
+                            content = @Content(mediaType = "text/plain")),
+                    @APIResponse(
+                            responseCode = "200",
+                            description = "Returns all articles.",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = Article.class))) })
+    @Operation(
+            summary = "Returns an article by id.",
+            description = "Returns an article by id.")
     public Response getAllArticles() {
         JsonArray articlesArray = articleRepository.getAll()
                 .stream()
@@ -37,6 +56,20 @@ public class ArticleResource {
     @GET
     @Path("/findById/{id}")
     @Bulkhead(5)
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "No article found",
+                            content = @Content(mediaType = "text/plain")),
+                    @APIResponse(
+                            responseCode = "200",
+                            description = "Returns the requested article.",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = Article.class))) })
+    @Operation(
+            summary = "Returns an article by id.",
+            description = "Returns an article by id.")
     public Response findArticleById(@PathParam("id") Long id) {
         return articleRepository.findById(id)
                 .map(this::getFullArticleJson)
@@ -57,6 +90,16 @@ public class ArticleResource {
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
+    @APIResponses(
+            value = {
+                    @APIResponse(
+                            responseCode = "200",
+                            description = "Add an article.",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = Article.class))) })
+    @Operation(
+            summary = "Add an article.",
+            description = "Add an article.")
     public Response addArticle(JsonObject newArticle) {
 //        if (!roles.contains("author")) {
 //            return Response.status(Response.Status.UNAUTHORIZED).build();
