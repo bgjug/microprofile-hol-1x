@@ -13,6 +13,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,9 @@ public class GUIResource {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String AUTH_TOKEN_PREFIX = "Bearer ";
+
+    static final String AUTH_COOKIE = "Authorization";
 
     @Inject
     @ConfigProperty(name = "usersServiceUrl", defaultValue = "http://localhost:8081/users")
@@ -38,9 +42,6 @@ public class GUIResource {
     @ConfigProperty(name = "subscribersServiceUrl", defaultValue = "http://localhost:8084/subscribers")
     private String subscribersUrl;
 
-    @Inject
-    private UserContext userContext;
-
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Path("/login")
@@ -54,13 +55,10 @@ public class GUIResource {
         Response loginResponse = client.target(usersUrl).path("find")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(requestBody));
-
-        if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
-            userContext.setLoggedUser(User.fromJson(loginResponse.readEntity(JsonObject.class)));
-            userContext.setUserJWT(loginResponse.getHeaderString(AUTHORIZATION_HEADER));
-        }
         client.close();
-        return loginResponse;
+
+        return handleAuthentication(loginResponse);
+
     }
 
     @POST
@@ -68,16 +66,25 @@ public class GUIResource {
     @Path("/register")
     public Response register(JsonObject newUser) {
         Client client = ClientBuilder.newClient();
-        Response registerResponse = client.target(usersUrl).path("add")
+        Response handleAuthentication = client.target(usersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.json(newUser));
-
-        if (registerResponse.getStatus() == Response.Status.OK.getStatusCode()) {
-            userContext.setLoggedUser(User.fromJson(newUser));
-            userContext.setUserJWT(registerResponse.getHeaderString(AUTHORIZATION_HEADER));
-        }
         client.close();
-        return registerResponse;
+
+        return handleAuthentication;
+    }
+
+    private Response handleAuthentication(Response authResponse) {
+        if (authResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            String headerString = authResponse.getHeaderString(AUTHORIZATION_HEADER);
+            String token = headerString.substring(AUTH_TOKEN_PREFIX.length());
+
+            return Response.ok()
+                    .cookie(new NewCookie(AUTH_COOKIE, token))
+                    .build();
+        } else {
+            return authResponse;
+        }
     }
 
     @GET
@@ -127,24 +134,23 @@ public class GUIResource {
     @POST
     @Path("/article")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response addArticle(JsonObject articleJson) {
+    public Response addArticle(JsonObject articleJson, @CookieParam(AUTH_COOKIE) String authToken) {
         JsonObject sendJson = Json.createObjectBuilder()
                 .add("title", articleJson.getString("title"))
                 .add("content", articleJson.getString("content"))
-                .add("author", userContext.getLoggedUser().getEmail())
                 .build();
 
         Client client = ClientBuilder.newClient();
         return client.target(contentUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION_HEADER, userContext.getUserJWT())
+                .header(AUTHORIZATION_HEADER, AUTH_TOKEN_PREFIX + authToken)
                 .post(Entity.json(sendJson));
     }
 
     @POST
     @Path("/subscriber")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response addSubscriber(JsonObject userJson) {
+    public Response addSubscriber(JsonObject userJson, @CookieParam(AUTH_COOKIE) String authToken) {
         JsonObject subscriberJson = Json.createObjectBuilder()
                 .add("email", userJson.getString("email"))
                 .add("firstName", userJson.getString("firstName"))
@@ -155,7 +161,7 @@ public class GUIResource {
         Client client = ClientBuilder.newClient();
         Response addSubscriberResponse = client.target(subscribersUrl).path("add")
                 .request(MediaType.APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION_HEADER, userContext.getUserJWT())
+                .header(AUTHORIZATION_HEADER, AUTH_TOKEN_PREFIX + authToken)
                 .post(Entity.json(subscriberJson));
         client.close();
         return addSubscriberResponse;

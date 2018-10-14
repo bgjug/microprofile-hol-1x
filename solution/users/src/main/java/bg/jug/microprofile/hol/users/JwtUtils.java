@@ -20,6 +20,8 @@ class JwtUtils {
 
     private static final PrivateKey PRIVATE_KEY = readPrivateKey();
 
+    private static final int AUTH_EXPIRY_SECONDS = 5 * 60;
+
     static String generateJWT(User user) {
         JSONObject claims = new JSONObject();
 
@@ -32,7 +34,7 @@ class JwtUtils {
 
         long currentTimeInSeconds = System.currentTimeMillis() / 1000;
         claims.put(Claims.iat.name(), currentTimeInSeconds);
-        claims.put(Claims.exp.name(), currentTimeInSeconds + 300);
+        claims.put(Claims.exp.name(), currentTimeInSeconds + AUTH_EXPIRY_SECONDS);
         claims.put(Claims.auth_time.name(), currentTimeInSeconds);
 
         claims.put(Claims.given_name.name(), user.getFirstName());
@@ -46,8 +48,6 @@ class JwtUtils {
         try {
             JWTClaimsSet claimsSet = JWTClaimsSet.parse(claims);
             SignedJWT jwt = new SignedJWT(header, claimsSet);
-//            System.out.println(header.toJSONObject().toJSONString());
-//            System.out.println(claims.toJSONString());
             jwt.sign(new RSASSASigner(PRIVATE_KEY));
             return jwt.serialize();
         } catch (Exception e) {
