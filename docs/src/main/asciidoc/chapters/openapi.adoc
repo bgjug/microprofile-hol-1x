@@ -1,0 +1,180 @@
+== OpenAPI
+
+Exposing APIs has become an essential part of all modern applications. At the center of this revolution known as the API Economy we find RESTful APIs, which can transform any application into language agnostic services that can be called from anywhere: on-premises, private cloud, public cloud, etc.
+
+For the clients and providers of these services to connect there needs to be a clear and complete contract. Similar to the WSDL contract for legacy Web Services, the OpenAPI v3 specification is the contract for RESTful Services.
+
+This MicroProfile specification, called OpenAPI 1.0, aims to provide a set of Java interfaces and programming models which allow Java developers to natively produce OpenAPI v3 documents from their JAX-RS applications.
+
+=== Design
+
+The documentation is generated using several annotations:
+|=========================================================
+| *Annotation* | *Description*
+| @Callback | Represents a callback URL that will be invoked.
+| @Callbacks | Represents an array of Callback URLs that can be invoked.
+| @CallbackOperation | Represents an operation that will be invoked during the callback.
+| @Components | A container that holds various reusable objects for different aspects of the OpenAPI Specification.
+| @Explode | Enumeration used to define the value of the explode property.
+| @ParameterIn | Enumeration representing the parameter’s in property.
+| @ParameterStyle | Enumeration for the parameter’s style property.
+| @SecuritySchemeIn | Enumeration for the security scheme’s in property.
+| @SecuritySchemeType | Enumeration for the security scheme’s type property.
+| @Extension | Adds an extension with contained properties.
+| @Extensions | Adds custom properties to an extension.
+| @ExternalDocumentation|References an external resource for extended documentation.
+| @Header | Describes a single header object.
+| @Contact | Contact information for the exposed API.
+| @Info | This annotation encapsulates metadata about the API.
+| @License | License information for the exposed API.
+| @Link | Represents a design-time link for a response.
+| @LinkParameter | Represents a parameter to pass to the linked operation.
+| @Content | Provides schema and examples for a particular media type.
+| @DiscriminatorMapping | Used to differentiate between other schemas which may satisfy the payload description.
+| @Encoding | Single encoding definition to be applied to single Schema Object.
+| @ExampleObject | Illustrates an example of a particular content.
+| @Schema | Allows the definition of input and output data types.
+| @OpenAPIDefinition | General metadata for an OpenAPI definition.
+| @Operation | Describes an operation or typically a HTTP method against a specific path.
+| @Parameter | Describes a single operation parameter.
+| @Parameters | Encapsulates input parameters.
+| @RequestBody | Describes a single request body.
+| @APIResponse | Describes a single response from an API operation.
+| @APIResponses | A container for multiple responses from an API operation.
+| @OAuthFlow | Configuration details for a supported OAuth Flow.
+| @OAuthFlows | Allows configuration of the supported OAuth Flows.
+| @OAuthScope | Represents an OAuth scope.
+| @SecurityRequirement | Specifies a security requirement for an operation.
+| @SecurityRequirements | Represents an array of security requirements where only one needs to be satisfied.
+| @SecurityRequirementsSet | Represents an array of security requirements that need to be satisfied.
+| @SecurityScheme | Defines a security scheme that can be used by the operations.
+| @SecuritySchemes | Represents an array of security schemes that can be specified.
+| @Server | Represents a server used in an operation or used by all operations in an OpenAPI document.
+| @Servers | A container for multiple server definitions.
+| @ServerVariable | Represents a server variable for server URL template substitution.
+| @Tag | Represents a tag for the API endpoint.
+| @Tags | A container of multiple tags.
+|=========================================================
+
+We are going to use some of these annotations.
+
+=== In our case
+
+Let us just annotate some of our methods in the Rest resources. We will do in our `ArticleResource` in the `Content` service.
+Pay attention to the annotation to the annotations `@APIResponses`, `@APIResponse` and `@Operation`
+
+
+[source, java]
+----
+@GET
+@Path("/all")
+@APIResponses(
+        value = {
+                @APIResponse(
+                        responseCode = "404",
+                        description = "No articles found",
+                        content = @Content(mediaType = "text/plain")),
+                @APIResponse(
+                        responseCode = "200",
+                        description = "Returns all articles.",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = Article.class))) })
+@Operation(
+        summary = "Returns an article by id.",
+        description = "Returns an article by id.")
+public Response getAllArticles() {
+    JsonArray articlesArray = articleRepository.getAll()
+            .stream()
+            .map(Article::toJson)
+            .reduce(Json.createArrayBuilder(), JsonArrayBuilder::add, JsonArrayBuilder::add)
+            .build();
+    return Response.ok(articlesArray).build();
+}
+----
+
+We can also annotate the other methods in the class
+
+[source, java]
+----
+
+@GET
+@Path("/findById/{id}")
+@Bulkhead(5)
+@APIResponses(
+        value = {
+                @APIResponse(
+                        responseCode = "404",
+                        description = "No article found",
+                        content = @Content(mediaType = "text/plain")),
+                @APIResponse(
+                        responseCode = "200",
+                        description = "Returns the requested article.",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = Article.class))) })
+@Operation(
+        summary = "Returns an article by id.",
+        description = "Returns an article by id.")
+public Response findArticleById(@PathParam("id") Long id) {
+    return articleRepository.findById(id)
+            .map(this::getFullArticleJson)
+            .map(json -> Response.ok(json).build())
+            .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+}
+
+@POST
+@Path("/add")
+@Consumes(MediaType.APPLICATION_JSON)
+@APIResponses(
+        value = {
+                @APIResponse(
+                        responseCode = "200",
+                        description = "Add an article.",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = Article.class))) })
+@Operation(
+        summary = "Add an article.",
+        description = "Add an article.")
+public Response addArticle(JsonObject newArticle) {
+    Article user = Article.fromJson(newArticle);
+    articleRepository.createOrUpdate(user);
+    return Response.ok().build();
+}
+----
+
+
+=== Static content
+
+We are also able to add some static content to the service's documentation.
+Simply add `openapi.yaml` file to the app's `META-INF` folder and add the following content:
+
+[source, yaml]
+----
+openapi: 3.0.0
+info:
+  title: Content  App
+  description: Service for content delivery.
+  license:
+    name: Eclipse Public License - v 1.0
+    url: https://www.eclipse.org/legal/epl-v10.html
+  version: 1.0.0
+servers:
+- url: http://localhost:{port}
+  description: Simple Open Liberty.
+  variables:
+    port:
+      default: "9120"
+      description: Server HTTP port.
+
+----
+
+=== Result
+
+Please, rebuild and redeploy the `Content` app.
+
+Now, if you proceed to http://localhost:9120/openapi you will see a yml representation of the generated documentation and static documentation.
+
+For a more user friendly representation please open http://localhost:9120/openapi/ui. You will wee a beautiful GUI looking like swagger.
+
+
+=== More info about Open API
+can be found here http://download.eclipse.org/microprofile/microprofile-open-api-1.0/microprofile-openapi-spec.html
