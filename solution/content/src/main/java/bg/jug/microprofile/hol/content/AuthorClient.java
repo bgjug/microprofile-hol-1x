@@ -1,6 +1,7 @@
 package bg.jug.microprofile.hol.content;
 
 import bg.jug.microprofile.hol.content.client.Author;
+import bg.jug.microprofile.hol.content.client.AuthorsRestClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
@@ -26,7 +27,7 @@ public class AuthorClient {
 
     @Inject
     @RestClient
-    private AuthorClient injectedAuthorsClient;
+    private AuthorsRestClient authorsRestClient;
 
 
     @Retry

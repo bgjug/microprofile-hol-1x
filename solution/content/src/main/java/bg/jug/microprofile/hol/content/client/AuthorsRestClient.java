@@ -17,7 +17,7 @@ import java.util.List;
 @Consumes("application/json")
 @RegisterRestClient
 @RegisterProvider(AuthorExceptionMapper.class)
-public interface AuthorsClient {
+public interface AuthorsRestClient {
 
     @GET
     List<Author> getAllAuthors();

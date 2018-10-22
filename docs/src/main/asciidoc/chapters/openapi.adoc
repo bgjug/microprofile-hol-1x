@@ -61,7 +61,7 @@ We are going to use some of these annotations.
 === In our case
 
 Let us just annotate some of our methods in the Rest resources. We will do in our `ArticleResource` in the `Content` service.
-Pay attention to the annotation to the annotations `@APIResponses`, `@APIResponse` and `@Operation`
+Pay attention to the annotations `@APIResponses`, `@APIResponse` and `@Operation`
 
 
 [source, java]
@@ -173,7 +173,7 @@ Please, rebuild and redeploy the `Content` app.
 
 Now, if you proceed to http://localhost:9120/openapi you will see a yml representation of the generated documentation and static documentation.
 
-For a more user friendly representation please open http://localhost:9120/openapi/ui. You will wee a beautiful GUI looking like swagger.
+For a more user friendly representation please open http://localhost:9120/openapi/ui. You will see a beautiful GUI looking like swagger.
 
 
 === More info about Open API

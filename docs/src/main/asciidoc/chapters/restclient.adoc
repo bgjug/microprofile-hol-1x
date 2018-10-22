@@ -1,0 +1,176 @@
+== Rest client
+
+The MicroProfile Rest Client builds on JAX-RS 2.0 client APIs to provide a type-safe approach for invoking RESTful services. This means writing client applications with more model-centric code and less 'plumbing'. Although these are client APIs, they are deployed in a server.
+
+=== The interface
+First, we start off with an interface that represents the remote service. The methods of the interface should match the RESTful APIs of the endpoint.
+Let us use this approach in `Content` microservice. As it uses `Authors` we will use RestClient to access it.
+
+[source, java]
+----
+@Path("/")
+@Consumes("application/json")
+public interface AuthorsRestClient {
+
+    @GET
+    List<Author> getAllAuthors();
+
+    @GET
+    @Path("/findByEmail/{email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    Author findAuthorByEmail(@PathParam("email") String email);
+}
+----
+
+The `Author` actually represents the author domain object from the `Authors` microservice. Since we don't have it in our, let us create it.
+
+[source, java]
+----
+public class Author implements Serializable {
+
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String bio;
+    private int salary;
+
+    public Author(){
+        //must have
+    }
+
+    public Author(String firstName, String lastName, String email, String bio, int salary) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.bio = bio
+        ;
+        this.salary = salary;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public int getSalary() {
+        return salary;
+    }
+
+    public JsonObject toJson(){
+        JsonObjectBuilder result = Json.createObjectBuilder();
+        result.add("lastName",getLastName())
+                .add("firstName",getFirstName())
+                .add("email",getEmail())
+                .add("salary",getSalary())
+                .add("bio",getBio());
+        return result.build();
+    }
+
+    public static Author fromJson(JsonObject authorObject){
+        return new Author(authorObject.getString("firstName"),
+                authorObject.getString("lastName"),
+                authorObject.getString("email"),
+                authorObject.getString("bio"),
+                authorObject.getJsonNumber("salary").intValue());
+    }
+}
+----
+
+=== Exception mapping
+
+Since there is no standard specification on error to exception mapping for microservices, each microservice may define its own http error code on different situations.
+In this case MicroProfile RestClient-1.0 give us the possibility to perform this mapping:
+
+[source, java]
+----
+@Provider
+public class AuthorExceptionMapper implements
+        ResponseExceptionMapper<RuntimeException> {
+
+    @Override
+    public boolean handles(int statusCode, MultivaluedMap<String, Object> headers) {
+        return statusCode == 404  // Not Found
+                || statusCode == 409; // Conflict
+    }
+
+    @Override
+    public RuntimeException toThrowable(Response response) {
+        switch(response.getStatus()) {
+            case 404: return new NullPointerException();
+            case 409: return new RuntimeException();
+        }
+        return null;
+    }
+
+}
+
+----
+
+As a result, if our `Authors` microservice ever return us 404, the mapper will convert it to NullPointerException, in case of 409 it will be just a RuntimeException.
+
+=== Using the client
+
+In the `Content` service uses `Authors` in the specialized `AuthorsClient` class.
+The @Inject combined with the @RestClient decorator tells CDI that we want to inject an instance of the `AuthorsRestClient`.
+Let us first decorate this interface with @RegisterRestClient and add our exception mapper @RegisterProvider(AuthorExceptionMapper.class)
+
+[source, java]
+----
+@Path("/")
+@Consumes("application/json")
+@RegisterRestClient
+@RegisterProvider(AuthorExceptionMapper.class)
+public interface AuthorsRestClient {
+
+    @GET
+    List<Author> getAllAuthors();
+
+    @GET
+    @Path("/findByEmail/{email}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    Author findAuthorByEmail(@PathParam("email") String email);
+}
+----
+
+Then we can inject `AuthorsRestClient` to `AuthorsClient` together with @RestClient annotation:
+
+[source, java]
+----
+@Inject
+@RestClient
+private AuthorsRestClient authorsRestClient;
+----
+
+and then modify the:
+
+[source, java]
+----
+@Retry
+@Fallback(fallbackMethod = "defaultAuthor")
+@Timeout(800)
+public JsonObject findAuthorByEmail(String email) {
+    System.out.println("Looking up author");
+    Client client = ClientBuilder.newClient();
+
+    JsonObject author = authorsRestClient.findAuthorByEmail(email);
+
+    return author;
+}
+----
+
+There is still one more step…​ we need to tell the MicroProfile Rest Client implementation the baseUrl value for the remote endpoint. For that, we use MicroProfile Config. The config property to use is <fullyQualifiedInterfaceName>/mp-rest/url. So you could specify this as a system property in the jvm.options file like this:
+
+`-Dbg.jug.microprofile.hol.content.client.AuthorsRestClient/mp-rest/url=http://localhost:9120/`
+
+So.. now it is all set! Rebuild and run the service!
