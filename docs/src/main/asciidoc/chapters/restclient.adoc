@@ -163,9 +163,9 @@ public JsonObject findAuthorByEmail(String email) {
     System.out.println("Looking up author");
     Client client = ClientBuilder.newClient();
 
-    JsonObject author = authorsRestClient.findAuthorByEmail(email);
+    Author author = authorsRestClient.findAuthorByEmail(email);
 
-    return author;
+    return author.toJson();
 }
 ----
 

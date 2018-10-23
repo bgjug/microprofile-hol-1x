@@ -39,7 +39,7 @@ public class AuthorClient {
         Client client = ClientBuilder.newClient();
 
         //FIXME: issue with marshalling
-//        JsonObject author = injectedAuthorsClient.findAuthorByEmail(email);
+//        Author author = injectedAuthorsClient.findAuthorByEmail(email);
         //FIXME: currentry using fallback:
 
         Response response = client.target(authorsUrl).path("findByEmail/" + email)
