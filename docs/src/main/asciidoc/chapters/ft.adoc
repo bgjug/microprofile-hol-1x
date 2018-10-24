@@ -3,7 +3,7 @@
 Microservice applications are not like monoliths.
 No matter how complex a monolith is, no matter of how many modules it may consist, inter-module communications are just method calls.
 Which are fairly predictable whether they will succeed or not.
-On the other hand, one of the main characteristics of microservice applications is that it is distributed.
+On the other hand, one of the main characteristics of microservice applications is that they are distributed.
 In distributed apps calls between different modules (or microservices) go over the wire.
 And the most reliable thing about a network call is that it is not reliable.
 
@@ -14,7 +14,7 @@ Throughout the last few years a lot of patterns were defined.
 They later became best practices in the area of fault tolerance in a microservice architecture.
 There were also libraries (https://github.com/Netflix/Hystrix[Hystrix] and https://github.com/jhalterman/failsafe[Failsafe] to name a few) that provided Java developers the toolset to implement those patterns in their apps.
 
-MicroProfile 1.2 implementations make no difference in their goal to provide those capabilities.
+MicroProfile implementations make no difference in their goal to provide those capabilities.
 In the following lines we will look at which those fault tolerance patterns are and how you can make your MicroProfile app use them.
 We will use the _content_ service, in conjunction with _authors_ for demo.
 When the former is requested to return a certain article, it in turns requests the author details (like first and last name and short bio) from the latter.
@@ -29,7 +29,7 @@ So we must be able to set a minimum time after which the call will be abandoned.
 
 Doing that is quite straightforward with MicroProfile Fault Tolerance.
 This and all the other resilience configurations can be enabled by just adding an annotation.
-In this case it is `org.eclipse.microprofile.faulttolerance.Retry`.
+In this case it is `org.eclipse.microprofile.faulttolerance.Timeout`.
 It receives a value, which is the time (by default in milliseconds, but the time unit can be configured) to wait for the method call to return.
 
 You can place this annotation on method or on class level.
@@ -216,10 +216,10 @@ If there are no failures in that period, it will go to half open state.
 === Asynchronous
 
 In the world of internet there is no time to wait.
-Besides resilient, another feature of the microservices apps *reactive*.
+Besides resilient, another feature of the microservices apps is *reactive*.
 First step to becoming reactive is to avoid waiting for long running operations and only show their result when it is ready.
 
-Let's again look at our magazine manager.
+Let's look again at our magazine manager.
 Suppose that adding a new article takes more than a couple of seconds.
 We will simulate that with an artificial sleep in the beginning of the ArticleRepository::createOrUpdate method:
 
@@ -276,7 +276,7 @@ Your article should appear.
 === Bulkhead
 
 Another useful pattern coming from the Release it! book.
-Its goal is to avoid faults in one part of a system to take the entire system down.
+Its goal is to avoid faults that occur in one part of a system to take the entire system down.
 MicroProfile Fault Tolerance (as well as Hystrix) achieves that goal by limiting the number of concurrent calls to a method.
 This way there is no way the execution of a certain method to hijack all the resources (e.g. threads for request handling) that might be needed by other methods.
 
