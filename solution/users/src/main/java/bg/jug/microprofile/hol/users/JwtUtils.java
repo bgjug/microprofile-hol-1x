@@ -26,6 +26,7 @@ class JwtUtils {
         JSONObject claims = new JSONObject();
 
         claims.put(Claims.iss.name(), "http://localhost:9100");
+        claims.put(Claims.aud.name(), "magazine-manager");
         claims.put(Claims.upn.name(), user.getEmail());
         claims.put(Claims.sub.name(), user.getEmail());
         JSONArray groups = new JSONArray();

@@ -1,6 +1,8 @@
 package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -90,6 +92,10 @@ public class ArticleResource {
 //    @Claim("groups")
 //    private Set<String> roles;
 
+    @Inject
+    @Claim("given_name")
+    private String givenName;
+
     @POST
     @Path("/add")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -108,6 +114,8 @@ public class ArticleResource {
 //        if (!roles.contains("author")) {
 //            return Response.status(Response.Status.UNAUTHORIZED).build();
 //        }
+
+        System.out.println("Given name: " + givenName);
 
         Article user = Article.fromJson(newArticle);
         articleRepository.createOrUpdate(user);
