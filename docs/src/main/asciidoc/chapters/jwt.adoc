@@ -49,6 +49,108 @@ Let's start with the authentication.
 
 === User authentication
 
-=== Role based access controll
+The authentication of our Magazine Manager application at the moment resembles quite a lot the authentication of a typical monolith app.
+There is a filter that intercepts the incoming requests.
+It gets hold of a session scoped bean, which is used to check whether there is already a logged user.
+If not, it returns unauthorized response code for all protected resources.
+On the other hand, if the requested page is the login one and if there is a successful login after that, the logged user is set in the mentioned session scoped bean.
+The only difference so far is that the authentication functionality is running on a separate microservice.
+
+This approach, however, suffers from a few flows.
+The GUI service here becomes a single point of failure.
+If it goes down and is later restarted, all the session cookies are invalidated.
+Which means that the users will have to login again, which is unpleasant.
+We also can't scale up the GUI service without burdening the load balancer with techniques like sticky sessions (to remember which user went to which instance of the service).
+
+We can definitely do better by seizing to rely on the `JSESSIONID` cookie.
+In the next lines we will make the users microservice return us a JWT token upon successful login (or registration).
+We will return that to the GUI microservice, which will simply put it in a cookie.
+Then it will be browser's responsibility to return that cookie upon each subsequent request.
+
+The GUI service's filter will only check if the cookie is present.
+It will be the job of the other microservices to check its validity.
+In either case the services will return response code 401 when something is wrong: the GUI service if the cookie is missing, the other services if it is not valid.
+Then the HTML files will pick that response code and will forward the flow to the login page.
+
+Let's first improve the login and registration processes.
+So far, upon successful credention validation, _users_ microservice's `UserResource` only returns status OK without any payload.
+Here we will generate a JSON web token (JWT) and will attach it to the designated response header.
+For the token generation we will use the `JWTUtils` class.
+It hides all the details of creating the JSON object, encoding it to Base64 and signing it with the private key packaged with the app (don't do that with productive apps - private keys should not be part of version control!).
+
+So, in `UserResource::findUserByEmailAndPassword`, if we find a user in the repository, we will generate a JWT and will attach it in the Authorization header, prefixed with the string "Bearer ":
+
+[source,java]
+----
+public Response findUserByEmailAndPassword(JsonObject loginDetails) {
+    return userRepository.findByLoginDetails(loginDetails.getString("email"), loginDetails.getString("password"))
+            .map(user -> Response.ok(user.toJson()).header("Authorization", "Bearer " + JwtUtils.generateJWT(user)).build())
+            .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+}
+----
+
+TIP: The header name `Authorization` and the `Bearer` prefix (or schema) are standard for all the platforms that use JWT for authentication and authorization, not just for MicroProfile.
+
+If we no go back to our `gui` service and more particularly to the `GUIResource` class.
+It injects the session scoped `UserContext` class and the `login` method sets there the logged user upon successful login.
+We want to get rid of the user context and put the JWT into a cookie.
+Which later on will be checked by the filter.
+
+Let's remove this piece of code first:
+
+[source,java]
+----
+if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+    userContext.setLoggedUser(User.fromJson(loginResponse.readEntity(JsonObject.class)));
+}
+client.close();
+return loginResponse;
+----
+
+And replace it with:
+
+[source,java]
+----
+if (loginResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+    String headerString = loginResponse.getHeaderString("Authorization");
+    // Cookies don't accept white space in their values
+    // so we strip the "Bearer " prefix and only send the real token
+    String token = headerString.substring("Bearer ".length());
+
+    return Response.ok()
+            .cookie(new NewCookie("Authorization", token))
+            .build();
+} else {
+    return loginResponse;
+}
+----
+
+Now the next requests that your browser sends to your app will contain the cookie with the JWT.
+
+Next, it is time to check for the cookie existence in the `LoggedUserFilter` class.
+Let's rework a bit the `filter` method and replace the `UserContext` check there as well:
+
+[source,java]
+----
+public void filter(ContainerRequestContext ctx) {
+    String reqURI = ctx.getUriInfo().getPath();
+    Cookie authCookie = ctx.getCookies().get("Authorization");
+
+    if (authCookie == null &&
+        WHITE_LIST.stream().noneMatch(reqURI.toLowerCase()::contains)) {
+        ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+}
+----
+
+As an exercise, implement the same flow for the registration case:
+
+. In `UserResource::addUser` generate the JWT and attach it as authorization header with bearer scheme
+. In `GUIResource::register` attach the JWT (without the Bearer prefix) to the same cookie as in the `login` method.
+. You may consider extracting some constants and methods here and there
+
+Try out what you did by starting the _GUI_, _user_ and optionally _content_ microservices and logging in with bilbo@example.org and bilbo123.
+
+=== Role based access control
 
 === JWT and user details
