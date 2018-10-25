@@ -50,6 +50,9 @@
                 statusCode: {
                     200: function(nonauthors) {
                         updateDropDown(nonauthors);
+                    },
+                    401: function() {
+                        window.location.replace("login.html");
                     }
                 }
             }
@@ -70,6 +73,9 @@
                     statusCode: {
                         200: function() {
                             window.location.replace("viewArticles.html");
+                        },
+                        401: function() {
+                            window.location.replace("login.html");
                         }
                     }
                 }
