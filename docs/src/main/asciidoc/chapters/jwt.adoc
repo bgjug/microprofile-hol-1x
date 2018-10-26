@@ -78,6 +78,12 @@ Here we will generate a JSON web token (JWT) and will attach it to the designate
 For the token generation we will use the `JWTUtils` class.
 It hides all the details of creating the JSON object, encoding it to Base64 and signing it with the private key packaged with the app (don't do that with productive apps - private keys should not be part of version control!).
 
+NOTE: There is almost nothing specific to MicroProfile JWT in the `JWTUtils` class.
+It uses the `nimbus-jose-jwt` library to generate the token and sign it.
+The only thing required by the MicroProfile specification is the presence of certain headers and values (known as claims).
+The headers include type (should be `JWT`), algorithm (should be `SHA-256`) and key ID.
+The other required claims are issuer, audience, subject, principal name, issued time, expiration time and JWT ID.
+
 So, in `UserResource::findUserByEmailAndPassword`, if we find a user in the repository, we will generate a JWT and will attach it in the Authorization header, prefixed with the string "Bearer ":
 
 [source,java]
@@ -153,4 +159,49 @@ Try out what you did by starting the _GUI_, _user_ and optionally _content_ micr
 
 === Role based access control
 
+You saw how you can create the access token and package it as JSON.
+You also learned a technique to return it to the (browser) client and check its presence upon each request.
+But the actual purpose of the token is to be checked by the rest of the microservices in the application.
+If they have some resources that are only available to logged users, the MicroProfile JWT spec has an easy way to declare that and let the runtime protect those resources.
+Even more: you can make some features (e.g. endpoints) only accessible to certain user groups.
+So the runtime will not allow executing them if the attached JWT does not contain that group.
+
+We are going to showcase the access control with the _content_ microservice.
+`ArticleResource` 's `addArticle` method, i.e. POST-ing to `/article/add`, should only be available to users with role `author`.
+
+First we need to enable at all MicroProfile JWT.
+We do it with a special annotation on the class that extends JAX-RS's Application.
+In the _content_ service case, this is `bg.jug.microprofile.hol.content.Application`.
+And the special annotation is `org.eclipse.microprofile.auth.LoginConfig`:
+
+[source,java]
+----
+@LoginConfig(authMethod = "MP-JWT", realmName = "mp-hol")
+public class Application extends javax.ws.rs.core.Application {
+}
+----
+
+TIP: If for some reason you don't extend `javax.ws.rs.core.Application`, but enable JAX-RS via web.xml, then the above configuration would be equivalent to the `loging-config` element there.
+
+Now you can go on and declare that a certain method is only available to certain groups.
+For that we will use another standard approach from Java EE: the `javax.annotation.security.RolesAllowed` annotation.
+There you can specify all the groups that can access the particular resource.
+
+[source,java]
+----
+@RolesAllowed("author")
+public Response addArticle(JsonObject newArticle) {
+    // method implementation goes here
+}
+----
+
+NOTE: Yes, it sounds a bit confusing - once we say roles, the other time groups, but for the time being you can treat both terms equally)
+
+Now only our authors (i.e. Frodo and Gandalf) can add articles.
+You can try to validate that by logging in with another user (for example Bilbo) and trying to create some content.
+
+As an exercise, restrict the `findArticleById` method to users in `admin`, `author` and `subscriber` role.
+And afterwards log on with Gimly and check whether you can view a concrete article.
+
 === JWT and user details
+
