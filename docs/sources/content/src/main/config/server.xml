@@ -7,7 +7,7 @@
     </featureManager>
 
     <quickStartSecurity userName="theUser" userPassword="thePassword"/>
-    <keyStore id="defaultKeyStore" password="Liberty"/>
+    <keyStore id="defaultKeyStore" location="keystore.jceks" type="JCEKS" password="secret"/>
 
     <httpEndpoint id="defaultHttpEndpoint"
                   httpPort="${default.http.port}"
@@ -16,4 +16,5 @@
     <!-- Automatically expand WAR files and EAR files -->
     <applicationManager autoExpand="true"/>
 
+    <mpJwt id="jwtUserConsumer" keyName="default" audiences="magazine-manager" issuer="http://localhost:9100"/>
 </server>

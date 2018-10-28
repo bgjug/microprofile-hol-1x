@@ -41,6 +41,10 @@ public class Article {
         return author;
     }
 
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
     public static Article fromJson(JsonObject jsonObject) {
         Long id = null;
         if (jsonObject.containsKey("id")) {

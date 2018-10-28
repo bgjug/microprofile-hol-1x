@@ -1,11 +1,8 @@
 package bg.jug.microprofile.hol.subscribers;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.metrics.annotation.Metered;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -17,13 +14,13 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.security.Principal;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by Dmitry Alexandrov on 26.02.2018.
  */
-@Path("/")
+@Path("/subscribers")
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class SubscribersResource {
@@ -49,16 +46,14 @@ public class SubscribersResource {
                 .orElse(Response.status(Response.Status.NOT_FOUND).build());
     }
 
-//    @Inject
-//    @Claim("groups")
-//    private Set<String> roles;
+    @Inject
+    private Principal principal;
 
     @POST
     @Path("/add")
+    @RolesAllowed("admin")
     public Response addSubscriber(String subscriberString) {
-//        if (!roles.contains("admin")) {
-//            return Response.status(Response.Status.UNAUTHORIZED).build();
-//        }
+        System.out.println("Principal: " + principal.getName());
 
         Subscriber subscriber = Subscriber.fromJson(subscriberString);
 

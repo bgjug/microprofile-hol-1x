@@ -13,6 +13,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <serverName>contentServer</serverName>
     </properties>
     <name>Content Microservice (WebSphere Liberty)</name>
 
@@ -37,6 +38,31 @@
                 </configuration>
             </plugin>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <!-- Copy the keystore to the server -->
+                    <execution>
+                        <id>copy-keystore</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/liberty/wlp/usr/servers/${serverName}/resources/security</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/config</directory>
+                                    <includes>
+                                        <include>keystore.jceks</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>net.wasdev.wlp.maven.plugins</groupId>
                 <artifactId>liberty-maven-plugin</artifactId>
                 <version>2.1.2</version>
@@ -49,7 +75,7 @@
                     </assemblyArtifact>
                     <include>usr</include>
                     <userDirectory>${project.build.directory}</userDirectory>
-                    <serverName>contentServer</serverName>
+                    <serverName>${serverName}</serverName>
                     <configFile>src/main/config/server.xml</configFile>
                     <bootstrapProperties>
                         <default.http.port>${contentPort}</default.http.port>
@@ -58,7 +84,7 @@
                 <executions>
                     <execution>
                         <id>create-server</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>create-server</goal>
                         </goals>
