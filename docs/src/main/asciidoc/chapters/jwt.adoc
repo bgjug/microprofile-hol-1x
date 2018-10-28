@@ -205,3 +205,108 @@ And afterwards log on with Gimly and check whether you can view a concrete artic
 
 === JWT and user details
 
+One of the consequences of using JWT for authentication and getting rid of the `UserContext` in the GUI service is that it can't pass the logged user as part of the request payload to other services anymore.
+Let's take the adding new articles for example.
+Right now the GUI service puts the author names in the payload.
+Here's an excerpt from `GUIResource`:
+
+[source,java]
+----
+public Response addArticle(JsonObject articleJson) {
+    JsonObject sendJson = Json.createObjectBuilder()
+            .add("title", articleJson.getString("title"))
+            .add("content", articleJson.getString("content"))
+            .add("author", userContext.getLoggedUser().getEmail())
+            .build();
+    // ...
+}
+----
+
+And then on the _content_ microservice side we take that from the payload and save it in the database.
+It happens in the `Article` class, which builds itself up from the JSON received:
+
+[source,java]
+----
+public static Article fromJson(JsonObject jsonObject) {
+    // Get the ID
+    return new Article(id, jsonObject.getString("title"),
+            jsonObject.getString("content"),
+            jsonObject.getString("author"));
+}
+----
+
+Let's change that.
+First, we'll remove the user context altogether from `GUIResource`:
+
+[source,java]
+----
+public Response addArticle(JsonObject articleJson, @CookieParam(AUTH_COOKIE) String authToken) {
+    JsonObject sendJson = Json.createObjectBuilder()
+            .add("title", articleJson.getString("title"))
+            .add("content", articleJson.getString("content"))
+            .build();
+
+    Client client = ClientBuilder.newClient();
+    return client.target(contentUrl).path("add")
+            .request(MediaType.APPLICATION_JSON_TYPE)
+            .header(AUTHORIZATION_HEADER, AUTH_TOKEN_PREFIX + authToken)
+            .post(Entity.json(sendJson));
+}
+----
+
+And then from the Article class:
+
+[source,java]
+----
+public static Article fromJson(JsonObject jsonObject) {
+    // Get the ID
+    return new Article(id, jsonObject.getString("title"),
+            jsonObject.getString("content"),
+            null);
+}
+----
+
+So the task at hand now is how to give the new article an author in the `ArticleResource::addArticle` method.
+Here we'll use another seminal feature of the MicroProfile JWT specification: obtaining JWT claims.
+
+In the previous section you saw how you can use the received token to validate whether the current user has sufficient privileges to perform certain operation.
+We used the `RolesAllowed` annotation for that, which made the runtime to implicitly check the `groups` claim of the incoming JWT.
+But we can also explicitly inject all the other claims and use them when needed.
+
+If you look at the `JWTUtils` class again (which generated the token), you'll notice that the user email is set to the `Subject` claim.
+So you can expect that if you inject that claim in the `ArticleResource`, you will get back that value.
+It is absolutely possible to do that:
+
+[source,java]
+----
+@Inject
+@Claim(standard = Claims.sub)
+private String email;
+----
+
+Now you can set that to the article in the `addArticle` method:
+
+[source,java]
+----
+public Response addArticle(JsonObject newArticle) {
+    Article article = Article.fromJson(newArticle);
+    article.setAuthor(email);
+    articleRepository.createOrUpdate(article);
+    return Response.ok().build();
+}
+----
+
+If you wish, you can inject the whole JSON web token:
+
+[source,java]
+----
+@Inject
+private JsonWebToken jwt;
+----
+
+And then use its API for the standard claims:
+
+[source,java]
+----
+article.setAuthor(jwt.getSubject());
+----

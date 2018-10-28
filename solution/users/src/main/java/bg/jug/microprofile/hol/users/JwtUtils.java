@@ -37,6 +37,7 @@ class JwtUtils {
         claims.put(Claims.iat.name(), currentTimeInSeconds);
         claims.put(Claims.exp.name(), currentTimeInSeconds + AUTH_EXPIRY_SECONDS);
         claims.put(Claims.auth_time.name(), currentTimeInSeconds);
+        claims.put(Claims.jti.name(), user.getEmail() + "-" + currentTimeInSeconds);
 
         claims.put(Claims.given_name.name(), user.getFirstName());
         claims.put(Claims.family_name.name(), user.getLastName());

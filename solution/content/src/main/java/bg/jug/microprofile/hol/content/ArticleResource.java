@@ -10,6 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.opentracing.Traced;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -75,6 +76,7 @@ public class ArticleResource {
             summary = "Returns an article by id.",
             description = "Returns an article by id.")
     @Traced(value = true, operationName = "ArticleResource.byid")
+    @RolesAllowed({"admin", "author", "subscriber"})
     public Response findArticleById(@PathParam("id") Long id) {
         return articleRepository.findById(id)
                 .map(this::getFullArticleJson)
@@ -88,13 +90,9 @@ public class ArticleResource {
         return article.toJson(authorJson);
     }
 
-//    @Inject
-//    @Claim("groups")
-//    private Set<String> roles;
-
     @Inject
-    @Claim("given_name")
-    private String givenName;
+    @Claim(standard = Claims.sub)
+    private String email;
 
     @POST
     @Path("/add")
@@ -110,15 +108,11 @@ public class ArticleResource {
             summary = "Add an article.",
             description = "Add an article.")
     @Traced(value = true, operationName = "ArticleResource.add")
+    @RolesAllowed("author")
     public Response addArticle(JsonObject newArticle) {
-//        if (!roles.contains("author")) {
-//            return Response.status(Response.Status.UNAUTHORIZED).build();
-//        }
-
-        System.out.println("Given name: " + givenName);
-
-        Article user = Article.fromJson(newArticle);
-        articleRepository.createOrUpdate(user);
+        Article article = Article.fromJson(newArticle);
+        article.setAuthor(email);
+        articleRepository.createOrUpdate(article);
         return Response.ok().build();
     }
 
