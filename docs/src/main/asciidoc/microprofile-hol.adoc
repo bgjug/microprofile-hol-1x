@@ -17,3 +17,9 @@ include::chapters/health.adoc[]
 include::chapters/metrics.adoc[]
 
 include::chapters/ft.adoc[]
+
+include::chapters/openapi.adoc[]
+
+include::chapters/jwt.adoc[]
+
+include::chapters/restclient.adoc[]
