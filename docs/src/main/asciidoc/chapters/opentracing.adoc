@@ -1,0 +1,78 @@
+== OpenTracing
+
+In an environment with numerous services communicating with each other, distributed trace information provides a way to view the end-to-end flow of requests through multiple services. In many environments, there is a central trace collection service that accepts distributed tracing information from individual applications (one popular distributed tracing service is `Zipkin`). The central service correlates the distributed tracing information and presents the end-to-end request flow information with a UI.
+
+The opentracing.io project defines an API that applications can use to create, propagate, and deliver distributed trace information. An implementation of the opentracing.io API must be available to an application so that the application can deliver distributed trace information. The implementation of the opentracing.io API must match the implementation of the central trace collection service.
+
+For example, if the central trace collection service is `Zipkin`, then the opentracing.io implementation used by applications must perform distributed tracing functions in a way that is specific to `Zipkin`. Typically, you must explicitly add code to each application in the environment for it to create, propagate, and deliver distributed tracing information. You do not need to add any code to your JAX-RS applications to participate in distributed tracing. The JAX-RS application will automatically create, propagate, and deliver distributed tracing information.
+
+* `@Traced`: Specify a class or method to be traced.
+
+=== The traced annotation
+
+The `@Traced` annotation, applies to a class or a method. When applied to a class, the `@Traced` annotation is applied to all methods of the class.
+If the annotation is applied to a class and method then the annotation applied to the method takes precedence.
+The annotation starts a Span at the beginning of the method, and finishes the Span at the end of the method.
+
+The `@Traced` annotation has two optional arguments.
+
+* `value=[true|false]`. Defaults to true.
+If `@Traced` is specified at the class level, then `@Traced(false)` is used to annotate specific methods to disable creation of a Span for those methods.
+By default all JAX-RS endpoint methods are traced.
+To disable Span creation of a specific JAX-RS endpoint, the `@Traced(false)` annotation can be used.
++
+When the `@Traced(false)` annotation is used for a JAX-RS endpoint method, the upstream SpanContext will not be extracted. Any Spans created, either automatically for outbound requests, or explicitly using an injected Tracer, will not have an upstream parent Span in the Span hierarchy.
+
+* `operationName=<Name for the Span>`.
+Default is `""`.
+If the `@Traced` annotation finds the `operationName` as `""`, the default operation name is used. For a JAX-RS endpoint method (see <<server-span-name>>).
+If the annotated method is not a JAX-RS endpoint, the default operation name of the new Span for the method is `<package name>.<class name>.<method name>`.
+If `operationName` is specified on a class, that `operationName` will be used for all methods of the class unless a method explicitly overrides it with its own `operationName`.
+
+Any exceptions thrown by non JAX-RS components must be logged to the span corresponding to the ongoing invocation.
+
+=== In our case
+We will be applying tracing in our `Content` service, as it is built on OpenLiberty server, which is at this time the only server supporting `MicroProfile 1.3` specification.
+`Zipkin` will be gathering the tracing information.
+
+Please download the latest version of Zipkin from https://zipkin.io/
+
+In our case the `mpOpenTracing-1.0` is already included in the `microProfile-1.3` specification. So we will just add to server.xml:
+
+[source, xml]
+----
+<!-- Enable features -->
+<featureManager>
+    <feature>microProfile-1.3</feature>
+    <feature>usr:opentracingZipkin-0.30</feature>
+</featureManager>
+
+<opentracingZipkin host="localhost"/>
+----
+
+Technically we are almost set! Now we have just to annotate the methods that have to be traced. Let us open the `ArticleResource` class.
+
+[source, java]
+----
+
+@Traced(value = true, operationName = "ArticleResource.all")
+public Response getAllArticles() {...}
+
+@Traced(value = true, operationName = "ArticleResource.byid")
+public Response findArticleById(@PathParam("id") Long id) {...}
+
+@Traced(value = true, operationName = "ArticleResource.add")
+public Response addArticle(JsonObject newArticle) {...}
+
+----
+
+Please build and run the `Content` service. We also need to start `Zipkin` by just running:
+
+`java -jar Zipkin.jar`
+
+Now if we run our service, open http://localhost:9000, login, and read some articles, we will generate some tracing information.
+
+To explore this information open http://localhost:9411 in your browser and click *find*. There you will be able to see all the tracing information for our services.
+
+=== More info
+more information about the spec can be found here https://github.com/eclipse/microprofile-opentracing/blob/master/spec/src/main/asciidoc/microprofile-opentracing.asciidoc
