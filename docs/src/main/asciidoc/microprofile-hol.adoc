@@ -22,6 +22,6 @@ include::chapters/openapi.adoc[]
 
 include::chapters/opentracing.adoc[]
 
-include::chapters/jwt.adoc[]
-
 include::chapters/restclient.adoc[]
+
+include::chapters/jwt.adoc[]

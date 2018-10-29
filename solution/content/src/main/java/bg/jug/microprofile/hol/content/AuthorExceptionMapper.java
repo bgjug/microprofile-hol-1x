@@ -1,4 +1,4 @@
-package bg.jug.microprofile.hol.content.client;
+package bg.jug.microprofile.hol.content;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 

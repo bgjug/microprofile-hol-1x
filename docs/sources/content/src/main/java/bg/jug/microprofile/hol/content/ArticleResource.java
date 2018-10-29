@@ -45,8 +45,7 @@ public class ArticleResource {
 
     private JsonObject getFullArticleJson(Article article) {
         String authorEmail = article.getAuthor();
-        JsonObject authorJson = authorClient.findAuthorByEmail(authorEmail);
-        return article.toJson(authorJson);
+        return authorClient.findAuthorByEmail(authorEmail);
     }
 
     @POST
