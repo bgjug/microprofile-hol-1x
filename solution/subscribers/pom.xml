@@ -40,7 +40,7 @@
             <plugin>
                 <groupId>fish.payara.maven.plugins</groupId>
                 <artifactId>payara-micro-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.2</version>
                 <executions>
                     <execution>
                         <id>bundle</id>
@@ -52,6 +52,22 @@
                 </executions>
                 <configuration>
                     <payaraVersion>${version.payara}</payaraVersion>
+                    <deployWar>true</deployWar>
+                    <javaCommandLineOptions>
+                        <option>
+                            <value>-Xdebug</value>
+                        </option>
+                        <option>
+                            <key>-Xrunjdwp:transport</key>
+                            <value>dt_socket,server=y,suspend=n,address=8130</value>
+                        </option>
+                    </javaCommandLineOptions>
+                    <commandLineOptions>
+                        <option>
+                            <key>--port</key>
+                            <value>9130</value>
+                        </option>
+                    </commandLineOptions>
                 </configuration>
             </plugin>
         </plugins>

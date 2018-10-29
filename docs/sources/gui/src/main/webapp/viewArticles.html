@@ -55,6 +55,9 @@
                             const articleId = articles[i].id;
                             row.append($("<td><a href='#/" + articleId + "' onclick='loadArticle(" + articleId + ")'>" + articles[i].title + "</a></td>"));
                         });
+                    },
+                    401: function() {
+                        window.location.replace("login.html");
                     }
                 }
             }
@@ -75,6 +78,9 @@
                             $("#author").text(article.author.firstName + " " + article.author.lastName);
                             $("#bio").text(article.author.bio);
                         });
+                    },
+                    401: function() {
+                        window.location.replace("login.html");
                     }
                 }
             }

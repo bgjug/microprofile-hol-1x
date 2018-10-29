@@ -45,7 +45,11 @@
                             row.append($("<td>" + nonsubscribers[i].lastName + "</td>"));
                             row.append($("<td><a class='btn btn-outline btn-success' href='#' onclick='addSubscription(" + JSON.stringify(item) + ")'>Subscribe</a></td>"));
                         });
+                    },
+                    401: function() {
+                        window.location.replace("login.html");
                     }
+
                 }
             }
         );
@@ -63,7 +67,11 @@
                 statusCode: {
                     200: function() {
                         window.location.replace("viewArticles.html");
+                    },
+                    401: function() {
+                        window.location.replace("login.html");
                     }
+
                 }
             }
         );

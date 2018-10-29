@@ -1,13 +1,9 @@
 package bg.jug.microprofile.hol.content;
 
-import bg.jug.microprofile.hol.content.client.Author;
-import bg.jug.microprofile.hol.content.client.AuthorsRestClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,9 +21,9 @@ public class AuthorClient {
     @ConfigProperty(name = "authorsServiceUrl", defaultValue = "http://localhost:9110/authors")
     private String authorsUrl;
 
-    @Inject
-    @RestClient
-    private AuthorsRestClient authorsRestClient;
+//    @Inject
+//    @RestClient
+//    private AuthorClient injectedAuthorsClient;
 
 
     @Retry

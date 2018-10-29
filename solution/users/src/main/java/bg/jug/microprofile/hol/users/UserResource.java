@@ -15,6 +15,9 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String AUTH_TOKEN_PREFIX = "Bearer ";
+
     @Inject
     private UserRepository userRepository;
 
@@ -23,7 +26,7 @@ public class UserResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response findUserByEmailAndPassword(JsonObject loginDetails) {
         return userRepository.findByLoginDetails(loginDetails.getString("email"), loginDetails.getString("password"))
-                .map(user -> Response.ok(user.toJson()).header("Authorization", "Bearer " + JwtUtils.generateJWT(user)).build())
+                .map(user -> Response.ok(user.toJson()).header(AUTHORIZATION_HEADER, AUTH_TOKEN_PREFIX + JwtUtils.generateJWT(user)).build())
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
@@ -34,7 +37,7 @@ public class UserResource {
     public Response addUser(JsonObject newUser) {
         User user = User.fromJson(newUser);
         userRepository.createOrUpdate(user);
-        return Response.ok().header("Authorization", "Bearer " + JwtUtils.generateJWT(user)).build();
+        return Response.ok().header(AUTHORIZATION_HEADER, AUTH_TOKEN_PREFIX + JwtUtils.generateJWT(user)).build();
     }
 
     @PUT

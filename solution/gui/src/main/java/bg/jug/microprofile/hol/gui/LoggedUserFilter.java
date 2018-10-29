@@ -1,43 +1,29 @@
 package bg.jug.microprofile.hol.gui;
 
-import javax.inject.Inject;
-import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
 import java.util.Arrays;
 import java.util.List;
 
-@WebFilter(urlPatterns = "/*")
-public class LoggedUserFilter implements Filter {
+import static bg.jug.microprofile.hol.gui.GUIResource.AUTH_COOKIE;
 
-    private static final List<String> WHITE_LIST = Arrays.asList("/css/", "/js/", "/img/", "login", "register");
+@Provider
+@PreMatching
+public class LoggedUserFilter implements ContainerRequestFilter {
 
-    @Inject
-    private UserContext userContext;
-
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-
-    }
+    private static final List<String> WHITE_LIST = Arrays.asList("login", "register");
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
+    public void filter(ContainerRequestContext containerRequestContext) {
+        String reqURI = containerRequestContext.getUriInfo().getPath();
+        Cookie authCookie = containerRequestContext.getCookies().get(AUTH_COOKIE);
 
-        String reqURI = httpRequest.getRequestURI();
-        String contextPath = httpRequest.getContextPath();
-
-        if (userContext.getUserJWT() != null || WHITE_LIST.stream().anyMatch(reqURI.toLowerCase()::contains)) {
-            chain.doFilter(request, response);
-        } else {
-            ((HttpServletResponse) response).sendRedirect(contextPath + "/login.html");
+        if (authCookie == null && WHITE_LIST.stream().noneMatch(reqURI.toLowerCase()::contains)) {
+            containerRequestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
         }
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }
