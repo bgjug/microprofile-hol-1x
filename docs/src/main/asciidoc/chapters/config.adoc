@@ -88,7 +88,14 @@ java -jar authors.jar -DusersServiceUrl=http://localhost:9100/users
 ----
 Now the app will inject the specified url.
 
+=== Additional exercise
 
+Now lets find all places where we are still using `String` constants for service URL's and change them to support external configuration.
+
+- `SubscribersResource`
+- `AuthorClient`
+
+---
 More information about the Configuration specification is available at:
 
 * http://microprofile.io/project/eclipse/microprofile-config
