@@ -49,7 +49,7 @@ In a CDI managed environment like those in our sample application, you can autom
 Let's add together a few health checks to the _subscribers_ microservice.
 Suppose that it should be considered live if it can access the _users_ microservice.
 Otherwise, if for some reason it can't, it should report that it is not healthy and hope that a restart by the orchestrating program will fix the issue.
-We'll start by adding this class to in the `bg.jug.microprofile.hol.subscribers` package:
+We'll start by adding this class in the `bg.jug.microprofile.hol.subscribers` package:
 
 [source,java]
 ----
