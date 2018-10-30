@@ -91,7 +91,7 @@ base:gc_ps_scavenge_time 129
 
 You may try with `http://localhost:9130/metrics/base` and `http://localhost:9130/metrics/vendor` as well..
 
-By default th output is in Prometeus format. But the output can be in JSON format as well. To have in JSON we have to add header "Accept: application/json" to our request. If you do not put any header it the server will recognize it as text and return the metrics in Prometeus format.
+By default th output is in Prometheus format. But the output can be in JSON format as well. To have in JSON we have to add header "Accept: application/json" to our request. If you do not put any header, the server will recognize it as text and return the metrics in Prometheus format.
 
 === Gathering the metrics
 The easiest way is to annotate field, method or class with an annotation.
@@ -116,7 +116,7 @@ The easiest way is to annotate field, method or class with an annotation.
 
 |@Metric
 |M, F, P
-|An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be usegid on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
+|An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be used on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
 |MetricUnits.NONE
 
 |@Timed
@@ -190,6 +190,7 @@ Lets switch to `SubscribersResource`
 public Response addSubscriber(String subscriberString) {
 ----
 
+Before we can test the new metrics we need to call at least one time the `Subscribers` service. For that purpose lets run `curl http://localhost:9130/subscribers/all`.
 Now let us run `curl -H "Accept: application/json" http://localhost:9130/metrics`. We will see the following JSON:
 
 [source,json]
@@ -302,15 +303,15 @@ Gauges represent metrics that are sampled to obtain their value.
 
 A gauge is an interface that needs to be implemented by the developer. Since the implementation of a gauge is not defined, they must be manually registered with the MetricRegistry by using the MetricRegistry .register() method.
 
-<1> First of all, let's inject the registry in `ContentRepository`
+. First of all, let's inject the registry in `ArticleRepository`
 
 [source,java]
 ----
 @Inject
 private MetricRegistry metricRegistry;
 ----
-
-<2> Then in the `@PostConstruct` method add our custom gauge, its metadata and register it. The Gauge is actually just an implementation of a functional interface, so we can implement it with just a lambda. Inside this lambda we are searching for an Author, identified by his email, who wrote the greatest count of articles. First we group by email to find count, then we select the email which has the greatest count:
+[start=2]
+. Then in the `@PostConstruct` method add our custom gauge, its metadata and register it. The Gauge is actually just an implementation of a functional interface, so we can implement it with just a lambda. Inside this lambda we are searching for an Author, identified by his email, who wrote the greatest count of articles. First we group by email to find count, then we select the email which has the greatest count:
 
 [source,java]
 ----
@@ -324,7 +325,8 @@ Gauge<String> theMostPublishedAuthor = () -> {
 };
 ----
 
-<3> We then have to add the details describing our gauge. This is done
+[start=3]
+. We then have to add the details describing our gauge. This is done
 
 [source,java]
 ----
@@ -335,10 +337,11 @@ Metadata mostPublishedMetadata = new Metadata(
         MetricType.GAUGE,
         MetricUnits.NONE);
 
-metricRegistry.register(mostPublishedMetadata.getName(), theMostPublishedAuthor, mostPublishedMetadata);
+metricRegistry.register(mostPublishedMetadata, theMostPublishedAuthor);
 ----
 
-<3> Now if we start the service (startContent.sh or startContent.bat) and run from the command line
+[start=4]
+. Now if we start the service (startContent.sh or startContent.bat) and run from the command line
 
 [source]
 ----
