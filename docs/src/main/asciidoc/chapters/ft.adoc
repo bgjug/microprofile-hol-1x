@@ -112,7 +112,7 @@ And pass that implementation to the value attribute of the `@Fallback` annotatio
         // Implementation goes here
     }
 
-public class AuthorMissingFallbackHandler
+public static class AuthorMissingFallbackHandler
             implements FallbackHandler<JsonObject> {
 
     @Override
