@@ -100,27 +100,27 @@ The easiest way is to annotate field, method or class with an annotation.
 |Annotation	|Applies to	|Description	|Default Unit
 
 |@Counted
-|M, C, T
+|Type, Constructor, Method
 |Denotes a counter, which counts the invocations of the annotated object.
 |MetricUnits.NONE
 
 |@Gauge
-|M
+|Method
 |Denotes a gauge, which samples the value of the annotated object.
 |none Must be supplied by the user
 
 |@Metered
-|M, C, T
+|Type, Constructor, Method
 |Denotes a meter, which tracks the frequency of invocations of the annotated object.
 |MetricUnits.PER_SECOND
 
 |@Metric
-|M, F, P
+|Method, Field, Parameter
 |An annotation that contains the metadata information when requesting a metric to be injected or produced. This annotation can be used on fields of type Meter, Timer, Counter, and Histogram. For Gauge, the @Metric annotation can only be used on producer methods/fields.
 |MetricUnits.NONE
 
 |@Timed
-|M, C, T
+|Type, Method, Constructor
 |Denotes a timer, which tracks duration of the annotated object.
 |MetricUnits.NANOSECONDS
 
@@ -269,7 +269,7 @@ application:bg_jug_microprofile_hol_subscribers_subscribers_repository_subscribe
 
 The MetricRegistry is used to maintain a collection of metrics along with their metadata. There is one shared singleton of the MetricRegistry per scope (application, base, and vendor). When metrics are registered using annotations, the metrics are registered in the application MetricRegistry (and thus the application scope).
 
-We can gain programmatic access to all our counters from the registry like this: first `@Inject` it to our class
+We can gain programmatic access to all our counters from the registry like this: first `@Inject` it in `SubscribersRepository`:
 
 [source,java]
 ----
