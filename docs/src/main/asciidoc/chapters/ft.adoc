@@ -200,7 +200,7 @@ Here is the same method in the `AuthorClient` class, this time protected by a ci
                     delay = 2000L, <3>
                     successThreshold = 2 <4>
                 )
-    @Fallback(fallbackMethod = "defaultAuthor") <5>
+    @Fallback(AuthorMissingFallbackHandler.class) <5>
     public JsonObject findAuthorByEmail(String email) {
         // Method implementation
     }

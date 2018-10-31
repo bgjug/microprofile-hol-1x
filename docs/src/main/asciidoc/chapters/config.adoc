@@ -44,11 +44,11 @@ private String usersUrl;
 ----
 
 `@ConfigProperty` annotation tells the server to scan the config sources, search for the property and inject it in the `usersUrls` variable.
-This annotation provides an optional fallback option `defaultValue` which we will use for out local development.
+This annotation provides an optional fallback option `defaultValue` which we will use for our local development.
 
 The same configuration should be applied to _content_ and _subscribers_ projects.
 
-The `Gui` project uses all of the other services, so we should put all th URLs in the config `src/main/webapp/META-INF/microprofile-config.properties`:
+The `Gui` project uses all of the other services, so we should put all th URLs in the config `src/main/resources/META-INF/microprofile-config.properties`:
 
 [source]
 ----
@@ -79,7 +79,7 @@ As we can see, there are always fallback options available.
 
 ==== Environmental Variables
 
-We are also able to set our configuration properties from ourside the app via _Environmental variables_. Let us experiment! Remove the line `usersServiceUrl=http://localhost:9100/users` from the `microprofile-config.properties` and start it. Since we have the default fallback the app will still start with the default url.
+We are also able to set our configuration properties from outside the app via _Environmental variables_. Let us experiment! Remove the line `usersServiceUrl=http://localhost:9100/users` from the `microprofile-config.properties` and start it. Since we have the default fallback the app will still start with the default url.
 But if we would like to make an external configuration, if for example you run the app in docker, you can do it with `-D<property=value> in the commandline:
 
 [source,bash]
@@ -88,7 +88,14 @@ java -jar authors.jar -DusersServiceUrl=http://localhost:9100/users
 ----
 Now the app will inject the specified url.
 
+=== Additional exercise
 
+Now lets find all places where we are still using `String` constants for service URL's and change them to support external configuration.
+
+- `SubscribersResource`
+- `AuthorClient`
+
+---
 More information about the Configuration specification is available at:
 
 * http://microprofile.io/project/eclipse/microprofile-config

@@ -27,7 +27,7 @@ There are even some individuals that joined the team to bring their knowledge an
 
 === A little bit of history
 
-Everything started June 2016.
+Everything started in June 2016.
 Then four vendors (RedHat, IBM, Tomitribe and Payara) and an organization (London Java Community) announced version 1 of MicroProfile.
 Its first target was not to immediately implement microservice patterns: it did not include any.
 It rather aimed at simplicity and at speed.
