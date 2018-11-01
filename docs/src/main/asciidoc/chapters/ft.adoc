@@ -101,17 +101,10 @@ Let's declare one in conjunction with our timeout:
 <2> Implement the fallback method. It should be in the same class as the original method and should have the same parameters and return type
 
 Sometime you want to use the same fallback behavior for multiple methods located in different classes.
-In that case you can define that behavior in a separate class, implementing the `FallbackHandler` interface.
-And pass that implementation to the value attribute of the `@Fallback` annotation:
+In that case you can define that behavior in a separate class, implementing the `FallbackHandler` interface:
 
 [source,java]
 ----
-    @Fallback(AuthorMissingFallbackHandler.class)
-    @Timeout(800)
-    public JsonObject findAuthorByEmail(String email) {
-        // Implementation goes here
-    }
-
 public class AuthorMissingFallbackHandler
             implements FallbackHandler<JsonObject> {
 
@@ -125,6 +118,18 @@ public class AuthorMissingFallbackHandler
                 .build();
     }
 }
+----
+
+
+And pass that implementation to the value attribute of the `@Fallback` annotation:
+
+[source,java]
+----
+    @Fallback(AuthorMissingFallbackHandler.class)
+    @Timeout(800)
+    public JsonObject findAuthorByEmail(String email) {
+        // Implementation goes here
+    }
 ----
 
 === Retry

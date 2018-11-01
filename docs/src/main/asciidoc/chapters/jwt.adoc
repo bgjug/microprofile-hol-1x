@@ -183,7 +183,7 @@ public class Application extends javax.ws.rs.core.Application {
 
 NOTE: Especially for Open Liberty, you need to do some additional configuration.
 We've done almost all of them for you.
-The only thing you need to do and go to the `src/main/config.server.xml` file and un-comment the `mpJwt` element in the bottom.
+The only thing you need to do is go to the `src/main/config.server.xml` file and un-comment the `mpJwt` element in the bottom.
 
 TIP: If for some reason you don't extend `javax.ws.rs.core.Application`, but enable JAX-RS via web.xml, then the above configuration would be equivalent to the `loging-config` element there.
 
