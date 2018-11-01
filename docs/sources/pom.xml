@@ -4,7 +4,7 @@
 
     <groupId>bg.jug</groupId>
     <artifactId>magman</artifactId>
-    <version>1.2</version>
+    <version>1.4</version>
     <packaging>pom</packaging>
 
     <properties>

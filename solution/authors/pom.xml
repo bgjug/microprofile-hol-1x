@@ -5,7 +5,7 @@
 
     <groupId>bg.jug</groupId>
     <artifactId>authors</artifactId>
-    <version>1.3.1</version>
+    <version>1.4.0-SNAPSHOT</version>
     <properties>
         <version.hammock>2.0</version.hammock>
         <maven.compiler.source>1.8</maven.compiler.source>
