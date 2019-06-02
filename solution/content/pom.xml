@@ -123,7 +123,7 @@
                             <goal>package-server</goal>
                         </goals>
                         <configuration>
-                            <assemblyInstallDirectory>${project.build.directory}</assemblyInstallDirectory>
+                            <assemblyInstallDirectory>${project.build.directory}/liberty</assemblyInstallDirectory>
                             <packageFile>${project.build.directory}/content.jar</packageFile>
                             <include>runnable</include>
                         </configuration>
@@ -137,14 +137,14 @@
                 <executions>
                     <execution>
                         <id>install-tracer</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>wget</goal>
                         </goals>
                         <configuration>
                             <url>https://repo1.maven.org/maven2/net/wasdev/wlp/tracer/liberty-opentracing-zipkintracer/1.0/liberty-opentracing-zipkintracer-1.0-sample.zip</url>
                             <unpack>true</unpack>
-                            <outputDirectory>${project.build.directory}/liberty/wlp/usr</outputDirectory>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                             <!-- <md5></md5> -->
                         </configuration>
                     </execution>
